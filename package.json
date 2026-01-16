@@ -1,0 +1,27 @@
+{
+  "name": "bmad-starter-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A BMAD learning project with user authentication and admin dashboard",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter @bmad-starter-kit/api dev\" \"pnpm --filter @bmad-starter-kit/web dev\"",
+    "dev:api": "pnpm --filter @bmad-starter-kit/api dev",
+    "dev:web": "pnpm --filter @bmad-starter-kit/web dev",
+    "build": "turbo run build",
+    "build:api": "pnpm --filter @bmad-starter-kit/api build",
+    "build:web": "pnpm --filter @bmad-starter-kit/web build",
+    "build:shared": "pnpm --filter @bmad-starter-kit/shared build",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "turbo": "^1.11.0",
+    "typescript": "^5.1.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}
