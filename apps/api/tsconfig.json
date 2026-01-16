@@ -15,11 +15,7 @@
     "skipLibCheck": true,
     "strictNullChecks": false,
     "noImplicitAny": false,
-    "strict": false,
-    "paths": {
-      "@bmad-starter-kit/shared": ["../../packages/shared/src/index.ts"],
-      "@bmad-starter-kit/shared/*": ["../../packages/shared/src/*"]
-    }
+    "strict": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test"]

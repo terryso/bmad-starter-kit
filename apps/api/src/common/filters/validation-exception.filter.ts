@@ -58,6 +58,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error: errors || error,
     });
 
+    // Log full exception stack for debugging
+    if (!(exception instanceof HttpException)) {
+      console.error('Exception details:', exception);
+    }
+
     response.status(status).json(apiError);
   }
 

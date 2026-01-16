@@ -1,11 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  Video,
-  FolderOpen,
-  Settings,
-  Upload,
   LayoutDashboard,
-  Tags,
   Users as UsersIcon,
   BarChart3,
 } from "lucide-react";
@@ -14,14 +9,6 @@ import { useAuthStore } from "@/stores/auth.store";
 
 const navigation = [
   { name: "仪表盘", href: "/", icon: LayoutDashboard },
-  { name: "视频管理", href: "/videos", icon: Video },
-  { name: "视频专辑", href: "/albums", icon: FolderOpen },
-  { name: "视频分类", href: "/categories", icon: Tags },
-  { name: "上传视频", href: "/upload", icon: Upload },
-];
-
-const bottomNav = [
-  { name: "设置", href: "/settings", icon: Settings },
 ];
 
 // Admin only navigation
@@ -41,10 +28,10 @@ export function Sidebar() {
       <div className="px-4 lg:px-6 mb-8">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Video className="w-4 h-4 text-primary-foreground" />
+            <LayoutDashboard className="w-4 h-4 text-primary-foreground" />
           </div>
           <span className="hidden lg:block text-foreground font-semibold text-lg tracking-tight">
-            视频管理平台
+            管理平台
           </span>
         </div>
       </div>
@@ -99,29 +86,6 @@ export function Sidebar() {
           </div>
         )}
       </nav>
-
-      {/* Bottom Navigation */}
-      <div className="px-2 lg:px-3 pt-4 border-t border-sidebar-border mt-4">
-        {bottomNav.map((item) => {
-          const isActive = location.pathname === item.href;
-          return (
-            <NavLink
-              key={item.name}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
-                "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                isActive
-                  ? "sidebar-active"
-                  : "text-sidebar-foreground"
-              )}
-            >
-              <item.icon className="w-5 h-5 flex-shrink-0" strokeWidth={1.5} />
-              <span className="hidden lg:block">{item.name}</span>
-            </NavLink>
-          );
-        })}
-      </div>
     </aside>
   );
 }
