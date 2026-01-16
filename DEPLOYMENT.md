@@ -47,7 +47,7 @@ PORT=3000
 NODE_ENV=production
 
 # CORS 配置 (部署完前端后更新)
-FRONTEND_URL=https://your-project.surge.sh
+FRONTEND_URL=https://bmad-starter-kit.surge.sh
 ```
 
 > **注意**: Supabase 连接需要使用 **Transaction mode** pooler，端口是 `6543` 而不是 `5432`。
@@ -69,45 +69,47 @@ https://bmad-starter-kit-api.onrender.com
 
 ## 二、前端部署 (surge.sh)
 
-### 步骤 1: 安装 surge
+### 快速部署（推荐）
+
+```bash
+cd apps/web
+pnpm run deploy
+```
+
+首次运行需要：
+1. 输入邮箱注册 surge
+2. 验证邮箱
+3. 设置密码
+
+### 手动部署步骤
+
+#### 步骤 1: 安装 surge
 
 ```bash
 npm install -g surge
 ```
 
-### 步骤 2: 更新 API 地址
+#### 步骤 2: API 地址已配置
 
-编辑 `apps/web/.env.production`，将 `VITE_API_URL` 更新为你的 Render 后端地址：
-
+`apps/web/.env.production` 已配置为：
 ```bash
-VITE_API_URL=https://bmad-starter-kit-api.onrender.com
+VITE_API_URL=https://bmad-starter-kit.onrender.com
 ```
 
-### 步骤 3: 构建前端
+#### 步骤 3: 构建并部署
 
 ```bash
+cd apps/web
 pnpm build
+surge dist bmad-starter-kit.surge.sh
 ```
 
-构建输出在 `apps/web/dist/` 目录。
+### 步骤 4: 更新后端 CORS
 
-### 步骤 4: 部署到 surge
-
-```bash
-surge apps/web/dist your-project-name.surge.sh
-```
-
-首次运行需要：
-1. 输入邮箱注册
-2. 验证邮箱
-3. 设置密码
-
-### 步骤 5: 更新后端 CORS
-
-回到 Render Dashboard，更新 `FRONTEND_URL` 环境变量为你的 surge 地址：
+回到 Render Dashboard，更新 `FRONTEND_URL` 环境变量：
 
 ```bash
-FRONTEND_URL=https://your-project-name.surge.sh
+FRONTEND_URL=https://bmad-starter-kit.surge.sh
 ```
 
 ---
@@ -117,12 +119,14 @@ FRONTEND_URL=https://your-project-name.surge.sh
 ### 1. 检查后端健康
 
 ```bash
-curl https://your-api.onrender.com/api/health
+curl https://bmad-starter-kit.onrender.com/
 ```
+
+应返回：`{"status":"ok","message":"API is running"}`
 
 ### 2. 测试前端
 
-1. 访问 `https://your-project-name.surge.sh`
+1. 访问 `https://bmad-starter-kit.surge.sh`
 2. 尝试登录/注册
 3. 测试用户管理功能（需要 ADMIN 角色）
 
@@ -161,11 +165,8 @@ curl https://your-api.onrender.com/api/health
 ### 更新前端
 
 ```bash
-# 重新构建
-pnpm build
-
-# 重新部署
-surge apps/web/dist your-project-name.surge.sh
+cd apps/web
+pnpm run deploy
 ```
 
 ---
@@ -174,6 +175,7 @@ surge apps/web/dist your-project-name.surge.sh
 
 | 文件 | 作用 |
 |------|------|
-| `apps/api/package.json` | 添加了 `start:prod` 脚本用于生产环境启动 |
-| `apps/web/.env.production` | 前端生产环境变量，配置后端 API 地址 |
-| `apps/web/vite.config.ts` | Vite 构建配置，输出到 `dist/` 目录 |
+| `apps/api/package.json` | 生产环境启动脚本 |
+| `apps/web/.env.production` | 前端生产环境变量（API 地址） |
+| `apps/web/deploy.sh` | 前端部署脚本 |
+| `apps/web/package.json` | 包含 `pnpm run deploy` 命令 |

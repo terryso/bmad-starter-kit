@@ -8,6 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
+    "deploy": "bash deploy.sh",
+    "deploy:preview": "vite build && surge dist --domain bmad-starter-kit-preview.surge.sh",
     "test": "node vitest-wrapper.mjs",
     "test:ui": "vitest --ui",
     "test:run": "node vitest-wrapper.mjs run",
