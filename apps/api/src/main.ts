@@ -1,12 +1,23 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { ValidationPipe, BadRequestException, INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/validation-exception.filter';
 
+// 健康检查处理 - 在全局中间件之前设置
+function setupHealthCheck(app: INestApplication) {
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/', (req: any, res: any) => {
+    res.status(200).json({ status: 'ok', message: 'API is running' });
+  });
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // 设置健康检查端点 (在全局前缀之前)
+  setupHealthCheck(app);
 
   // 全局前缀 /api
   app.setGlobalPrefix('api');
