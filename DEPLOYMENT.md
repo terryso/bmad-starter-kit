@@ -25,7 +25,7 @@
 | Region | **Singapore** (离国内较近) |
 | Branch | `develop` |
 | Root Directory | `apps/api` |
-| Build Command | `pnpm install --frozen-lockfile && pnpm run build` |
+| Build Command | `pnpm install --prod=false && pnpm run build` |
 | Start Command | `npm run start:prod` |
 | Instance Type | **Free** |
 
