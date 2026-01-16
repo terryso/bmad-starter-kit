@@ -73,7 +73,7 @@ https://bmad-starter-kit-api.onrender.com
 
 ```bash
 cd apps/web
-pnpm run deploy
+pnpm run deploy:surge
 ```
 
 首次运行需要：
@@ -166,7 +166,7 @@ curl https://bmad-starter-kit.onrender.com/
 
 ```bash
 cd apps/web
-pnpm run deploy
+pnpm run deploy:surge
 ```
 
 ---
