@@ -3,8 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "prebuild": "pnpm --filter @bmad-starter-kit/shared build && pnpm run prisma:generate",
-    "build": "nest build",
+    "build": "pnpm --filter @bmad-starter-kit/shared build && pnpm run prisma:generate && nest build",
     "build:prod": "tsc -p tsconfig.build.json",
     "start": "nest start",
     "start:prod": "node dist/main",
