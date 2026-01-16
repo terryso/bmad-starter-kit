@@ -16,6 +16,10 @@
 
 项目已经包含一个基础的认证系统和管理后台，作为添加新功能的起点。
 
+## 在线演示
+
+[https://bmad-starter-kit.surge.sh/](https://bmad-starter-kit.surge.sh/)
+
 ## 快速开始
 
 ```bash
@@ -200,6 +204,18 @@ pnpm test         # 运行所有测试
 
 - [BMAD 文档](https://docs.bmad-method.org/)
 - [Claude Code CLI](https://claude.com/claude-code)
+
+## 贡献指南
+
+这是一个社区学习项目！如果你在练习 BMAD 过程中实现了某个功能，觉得对其他人也有帮助，欢迎提交 PR 到 `develop` 分支。审查通过后，我会合并并部署到线上 demo 供大家试用。
+
+**如何贡献：**
+
+1. Fork 本仓库
+2. 创建功能分支：`git checkout -b feature/your-feature-name`
+3. 按照 BMAD 工作流实现你的功能
+4. 确保所有测试通过：`pnpm test`
+5. 提交 PR 到 `develop` 分支
 
 ---
 

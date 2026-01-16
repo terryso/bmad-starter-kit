@@ -16,6 +16,10 @@ After cloning this repository, you can immediately start practicing:
 
 The project comes with a basic authentication system and admin dashboard as a foundation for adding new features.
 
+## Live Demo
+
+[https://bmad-starter-kit.surge.sh/](https://bmad-starter-kit.surge.sh/)
+
 ## Quick Start
 
 ```bash
@@ -200,6 +204,18 @@ pnpm test         # Run all tests
 
 - [BMAD Documentation](https://docs.bmad-method.org/)
 - [Claude Code CLI](https://claude.com/claude-code)
+
+## Contributing
+
+This is a community learning project! If you've implemented a feature during your BMAD practice and feel it would be useful for others, feel free to submit a PR to the `develop` branch. After review, it will be merged and deployed to the live demo for everyone to try.
+
+**How to contribute:**
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Follow the BMAD workflow to implement your feature
+4. Ensure all tests pass: `pnpm test`
+5. Submit a PR to `develop` branch
 
 ---
 
