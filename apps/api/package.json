@@ -3,9 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "nest build",
+    "build": "pnpm --filter @bmad-starter-kit/shared build && nest build",
     "build:prod": "tsc -p tsconfig.build.json",
-    "prebuild": "cd ../../packages/shared && pnpm run build",
     "start": "nest start",
     "start:prod": "node dist/main",
     "start:dev": "nest start --watch",
