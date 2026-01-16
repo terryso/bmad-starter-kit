@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "nest build",
+    "build": "tsc",
+    "build:nest": "nest build",
     "start": "nest start",
     "start:prod": "node dist/main",
     "start:dev": "nest start --watch",
