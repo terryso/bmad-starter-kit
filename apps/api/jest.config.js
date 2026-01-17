@@ -24,5 +24,8 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(@prisma/client|@anthropic-ai/claude-agent-sdk))',
   ],
+  // Ignore dist directory to avoid duplicate mock warnings
+  modulePathIgnorePatterns: ['<rootDir>/dist'],
+  testPathIgnorePatterns: ['<rootDir>/dist'],
   maxWorkers: 1, // Avoid os.availableParallelism() issues
 };
