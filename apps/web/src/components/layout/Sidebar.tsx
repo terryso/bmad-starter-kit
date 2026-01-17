@@ -3,12 +3,14 @@ import {
   LayoutDashboard,
   Users as UsersIcon,
   BarChart3,
+  FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
 
 const navigation = [
   { name: "仪表盘", href: "/", icon: LayoutDashboard },
+  { name: "项目展示", href: "/showcase", icon: FolderOpen },
 ];
 
 // Admin only navigation
