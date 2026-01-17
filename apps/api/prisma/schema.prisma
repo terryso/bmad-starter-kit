@@ -5,18 +5,84 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["public", "auth"]
 }
 
 enum Role {
   USER
   ADMIN
+  @@schema("public")
+}
+
+enum ProjectStatus {
+  PENDING    // 待审核
+  APPROVED   // 已通过
+  REJECTED   // 已拒绝
+  @@schema("public")
+}
+
+enum ProjectCategory {
+  WEB_APP    // Web 应用
+  CLI        // 命令行工具
+  LIBRARY    // 库/框架
+  API        // API 服务
+  MOBILE     // 移动应用
+  OTHER      // 其他
+  @@schema("public")
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  name              String
+  role              Role      @default(USER)
+  createdAt         DateTime  @default(now())
+
+  // Project 关联
+  submittedProjects Project[] @relation("SubmittedProjects")
+  reviewedProjects  Project[] @relation("ReviewedProjects")
+
+  @@schema("public")
+}
+
+model Project {
+  id              String          @id @default(cuid())
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // GitHub 项目信息
+  repositoryName  String          // 仓库名称 (如: "bmad-starter-kit")
+  description     String          @db.Text      // 项目描述
+  owner           String                        // 所有者用户名 (如: "anthropics")
+  stars           Int                           // 星标数
+  language        String?                       // 主要编程语言
+  topics          String[]                      // GitHub Topics 标签
+  githubUpdatedAt DateTime?                    // GitHub 仓库最后更新时间
+  homepageUrl     String?                       @db.Text       // 官网 URL
+  license         String?                       // 开源协议
+  githubUrl       String          @unique       // GitHub 仓库 URL (唯一)
+
+  // 展示相关字段
+  category        ProjectCategory @default(OTHER) // 项目分类
+  suggestedTags   String[]                      // 建议的展示标签
+  screenshotUrl   String?                       @db.Text       // 截图 URL
+
+  // 审核状态字段
+  status          ProjectStatus   @default(PENDING) // 审核状态
+  submittedBy     String                        // 提交者用户 ID
+  reviewedBy      String?                       // 审核者用户 ID (可选)
+  reviewedAt      DateTime?                     // 审核时间 (可选)
+  rejectionReason String?          @db.Text      // 拒绝原因 (可选)
+
+  // 关联关系
+  submittedByUser User            @relation("SubmittedProjects", fields: [submittedBy], references: [id], onDelete: Cascade)
+  reviewedByUser  User?           @relation("ReviewedProjects", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  // 索引
+  @@index([status])                    // 查询待审核项目
+  @@index([category])                  // 分类筛选
+  @@index([submittedBy])               // 我的项目列表
+  @@index([status, category])          // 组合查询
+  @@schema("public")
 }
