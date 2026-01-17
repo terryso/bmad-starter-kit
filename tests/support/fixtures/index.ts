@@ -12,6 +12,11 @@
  */
 import { test as base, Page } from '@playwright/test';
 import { UserFactory } from './factories/user-factory';
+import { ProjectFactory } from './factories/project.factory';
+
+// 导出工厂类供外部使用
+export { UserFactory } from './factories/user-factory';
+export { ProjectFactory } from './factories/project.factory';
 
 /**
  * API 配置
@@ -35,6 +40,7 @@ export interface AuthenticatedUser {
  */
 export type TestFixtures = {
   userFactory: UserFactory;
+  projectFactory: ProjectFactory;
   authenticatedUser: AuthenticatedUser;
   authenticatedAdminUser: AuthenticatedUser;
   apiHelper: ApiHelper;
@@ -152,6 +158,12 @@ export const test = base.extend<TestFixtures>({
     await use(factory);
     // 自动清理
     await factory.cleanup();
+  },
+
+  // 项目数据工厂
+  projectFactory: async ({}, use) => {
+    const factory = new ProjectFactory();
+    await use(factory);
   },
 
   // API 辅助工具

@@ -15,12 +15,19 @@
 ```
 tests/
 ├── e2e/                    # E2E 测试文件
-│   └── example.spec.ts     # 示例测试
+│   ├── admin-api.spec.ts   # 管理员 API 测试
+│   ├── auth-api.spec.ts    # 认证 API 测试
+│   ├── showcase-api.spec.ts # 项目展示 API 测试
+│   ├── project-submission.spec.ts # 项目提交 E2E 测试
+│   ├── auth.spec.ts        # 认证流程测试
+│   ├── admin.spec.ts       # 管理员功能测试
+│   └── ...
 ├── support/                # 测试基础设施
 │   ├── fixtures/           # 测试 Fixtures
 │   │   ├── index.ts        # Fixture 入口
 │   │   └── factories/      # 数据工厂
-│   │       └── user-factory.ts  # 用户数据工厂
+│   │       ├── user-factory.ts    # 用户数据工厂
+│   │       └── project.factory.ts # 项目数据工厂
 │   ├── helpers/            # 辅助函数
 │   │   ├── api.ts          # API 请求辅助
 │   │   └── selectors.ts    # 选择器定义
@@ -357,7 +364,7 @@ import { UserFactory } from '@/tests/support/fixtures/factories/user-factory';
 
 const factory = new UserFactory();
 
-// 创建默���用户
+// 创建默认用户
 const user = factory.createUser();
 
 // 创建自定义用户
@@ -371,6 +378,32 @@ const users = factory.createUsers(5);
 
 // 自动清理 (在测试结束后)
 await factory.cleanup();
+```
+
+### ProjectFactory
+
+生成项目展示测试数据:
+
+```typescript
+import { ProjectFactory } from '@/tests/support/fixtures/factories/project.factory';
+
+const factory = new ProjectFactory();
+
+// 创建项目数据
+const project = factory.createProject();
+
+// 创建自定义项目
+const customProject = factory.createProject({
+  githubUrl: 'https://github.com/facebook/react',
+  category: 'LIBRARY',
+  language: 'TypeScript',
+});
+
+// 创建有效的 GitHub URL
+const githubUrl = factory.createValidGithubUrl();
+
+// 创建无效的 GitHub URL (用于测试验证)
+const invalidUrl = factory.createInvalidGithubUrl('incomplete');
 ```
 
 ---
