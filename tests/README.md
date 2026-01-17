@@ -1,280 +1,414 @@
-# Test Suite Documentation
+# 测试套件文档
 
-## Overview
+## 概述
 
-This project has comprehensive test coverage across both API (NestJS) and Web (React/Vite) applications.
+本项目使用 Playwright 作为端到端测试框架，提供跨浏览器测试能力和强大的调试功能。
 
-**Test Frameworks:**
-- **API**: Jest with NestJS TestingModule
-- **Web**: Vitest with React Testing Library
+**测试框架:**
+- **E2E 测试**: Playwright (跨浏览器支持: Chrome, Firefox, Safari)
+- **单元测试**: Vitest (前端) / Jest (后端)
 
-## Test Structure
+---
 
-### API Tests (apps/api/)
-
-Located in `apps/api/src/` alongside source files.
+## 测试结构
 
 ```
-apps/api/src/
-├── modules/
-│   ├── auth/
-│   │   ├── auth.controller.spec.ts      # Auth controller tests
-│   │   ├── auth.service.spec.ts         # Auth service tests
-│   │   ├── dto/
-│   │   │   ├── login.dto.spec.ts        # Login DTO validation tests
-│   │   │   └── register.dto.spec.ts     # Register DTO validation tests
-│   │   └── guards/
-│   │       ├── jwt-auth.guard.spec.ts   # JWT guard tests
-│   │       └── roles.guard.spec.ts      # Roles guard tests
-│   └── admin/
-│       ├── admin.controller.spec.ts     # Admin controller tests
-│       └── admin.service.spec.ts        # Admin service tests
-├── test-helpers/
-│   ├── factories/                       # Data factories
-│   │   └── user.factory.ts              # User test data generation
-│   ├── fixtures/                        # Test fixtures
-│   │   └── api-integration.fixture.ts   # Integration test setup
-│   └── integration/
-│       └── auth-api.integration.spec.ts # Auth API integration tests
-└── users/
-    ├── users.controller.spec.ts         # Users controller tests
-    └── users.service.spec.ts            # Users service tests
+tests/
+├── e2e/                    # E2E 测试文件
+│   └── example.spec.ts     # 示例测试
+├── support/                # 测试基础设施
+│   ├── fixtures/           # 测试 Fixtures
+│   │   ├── index.ts        # Fixture 入口
+│   │   └── factories/      # 数据工厂
+│   │       └── user-factory.ts  # 用户数据工厂
+│   ├── helpers/            # 辅助函数
+│   │   ├── api.ts          # API 请求辅助
+│   │   └── selectors.ts    # 选择器定义
+│   └── tsconfig.json       # TypeScript 配置
+└── README.md               # 本文档
 ```
 
-### Web Tests (apps/web/)
+---
 
-Located in `apps/web/src/` alongside source files.
+## 环境设置
 
-```
-apps/web/src/
-├── components/
-│   ├── auth/
-│   │   └── AuthProvider.test.tsx        # Auth provider component tests
-│   ├── features/
-│   │   └── auth/
-│   │       ├── LoginForm.test.tsx       # Login form component tests
-│   │       └── RegisterForm.test.tsx    # Register form component tests
-│   └── routes/
-│       └── ProtectedRoute.test.tsx      # Protected route component tests
-├── stores/
-│   └── auth.store.test.ts               # Auth store unit tests
-└── lib/
-    └── api.test.ts                      # API client unit tests
-```
-
-## Running Tests
-
-### API Tests
+### 1. 安装依赖
 
 ```bash
-# Run all API tests
-cd apps/api && pnpm test
+# 安装 Playwright 和浏览器
+pnpm install
 
-# Run tests in watch mode
-cd apps/api && pnpm test:watch
-
-# Run tests with coverage
-cd apps/api && pnpm test:cov
-
-# Run e2e tests
-cd apps/api && pnpm test:e2e
+# 安装 Playwright 浏览器 (首次运行)
+npx playwright install
 ```
 
-### Web Tests
+### 2. 配置环境变量
+
+复制 `.env.example` 到 `.env` 并配置:
 
 ```bash
-# Run all web tests
-cd apps/web && pnpm test
-
-# Run tests in watch mode
-cd apps/web && pnpm test:run -- --watch
-
-# Run tests with coverage
-cd apps/web && pnpm test:coverage
-
-# Run tests with UI
-cd apps/web && pnpm test:ui
+cp .env.example .env
 ```
 
-## Test Levels
+编辑 `.env` 文件:
 
-### Unit Tests
-
-**Purpose**: Test isolated functions and classes
-
-**Characteristics**:
-- Fast execution
-- No external dependencies
-- Test business logic in isolation
-
-**Examples**:
-- DTO validation tests
-- Service method tests
-- Store unit tests
-- Utility function tests
-
-### Integration Tests
-
-**Purpose**: Test component interactions and API contracts
-
-**Characteristics**:
-- Test multiple components together
-- May use test databases
-- Validate service boundaries
-
-**Examples**:
-- API endpoint tests
-- Controller + Service integration
-- API client tests
-
-### Component Tests
-
-**Purpose**: Test React components in isolation
-
-**Characteristics**:
-- Test user interactions
-- Validate component state
-- Mock external dependencies
-
-**Examples**:
-- LoginForm tests
-- RegisterForm tests
-- ProtectedRoute tests
-
-## Priority Tags
-
-Tests are tagged with priority levels for selective execution:
-
-| Priority | Description | Examples |
-|----------|-------------|----------|
-| **P0** | Critical paths, security, data integrity | Login flow, token refresh, auth guards |
-| **P1** | High value, frequently used | Form validation, error handling |
-| **P2** | Medium priority, edge cases | Loading states, fallback content |
-| **P3** | Low priority, nice to have | Optional features |
-
-## Test Fixtures and Factories
-
-### User Factory
-
-Generate test user data with random values:
-
-```typescript
-import { createUser, createUsers, generateEmail, generatePassword } from '@/test-helpers/factories/user.factory';
-
-// Create single user
-const user = createUser({ email: 'test@example.com' });
-
-// Create multiple users
-const users = createUsers(5);
-
-// Generate random data
-const email = generateEmail();
-const password = generatePassword();
+```bash
+BASE_URL=http://localhost:5173  # 前端应用地址
+API_URL=http://localhost:3000   # 后端 API 地址
 ```
 
-### API Integration Fixture
+### 3. Node 版本
 
-Set up full NestJS testing module:
+确保使用正确的 Node 版本:
+
+```bash
+# 使用 nvm
+nvm use
+
+# 或查看要求的版本
+cat .nvmrc
+```
+
+---
+
+## 运行测试
+
+### 基本命令
+
+```bash
+# 运行所有 E2E 测试
+pnpm test:e2e
+
+# 使用 UI 模式运行 (推荐用于开发)
+pnpm test:e2e:ui
+
+# 使用 headed 模式运行 (显示浏览器窗口)
+pnpm test:e2e:headed
+
+# 调试模式
+pnpm test:e2e:debug
+
+# 查看测试报告
+pnpm test:e2e:report
+```
+
+### 运行特定测试
+
+```bash
+# 运行单个测试文件
+npx playwright test example.spec.ts
+
+# 运行特定测试行
+npx playwright test example.spec.ts:10
+
+# 按名称过滤
+npx playwright test --grep "应该能加载首页"
+```
+
+### 浏览器选择
+
+```bash
+# 仅在 Chrome 中运行
+npx playwright test --project=chromium
+
+# 仅在 Firefox 中运行
+npx playwright test --project=firefox
+
+# 仅在 Safari 中运行
+npx playwright test --project=webkit
+```
+
+---
+
+## 编写测试
+
+### 基础测试结构
+
+所有测试应遵循 **Given-When-Then** 模式:
 
 ```typescript
-import { ApiIntegrationFixture } from '@/test-helpers/fixtures/api-integration.fixture';
+import { test, expect } from '@/tests/support/fixtures';
 
-describe('My Tests', () => {
-  let fixture: ApiIntegrationFixture;
+test('[P0] 应该能加载首页', async ({ page }) => {
+  // GIVEN: 用户访问首页
+  await page.goto('/');
 
-  beforeAll(async () => {
-    fixture = new ApiIntegrationFixture();
-    await fixture.create();
-  });
-
-  afterAll(async () => {
-    await fixture.cleanup();
-  });
+  // THEN: 页面标题可见
+  await expect(page).toHaveTitle(/BMAD Starter Kit|首页/);
 });
 ```
 
-## Best Practices
-
-### Given-When-Then Structure
-
-All tests should follow this pattern:
+### 使用 Fixtures
 
 ```typescript
-it('should do something when condition is met', async () => {
-  // GIVEN: Setup test conditions
-  const testData = createTestData();
+import { test, expect } from '@/tests/support/fixtures';
 
-  // WHEN: Execute the action
-  const result = await executeAction(testData);
+test('应该创建测试用户', async ({ userFactory }) => {
+  // GIVEN: 使用数据工厂创建用户
+  const user = userFactory.createUser({
+    email: 'custom@example.com',
+  });
 
-  // THEN: Verify the outcome
-  expect(result).toBe(expectedValue);
+  // THEN: 用户数据有效
+  expect(user.email).toBe('custom@example.com');
 });
 ```
 
-### Test Naming
+### 选择器策略
 
-- Use descriptive names that explain what is being tested
-- Include the expected outcome
-- For user-facing features, use user-centric language
-
-**Good examples**:
-- `should login with valid credentials`
-- `should show error for invalid email format`
-- `should redirect unauthenticated users to login`
-
-### Avoid Common Pitfalls
-
-- ❌ Testing implementation details
-- ❌ Hardcoded test data (use factories)
-- ❌ Brittle selectors (use data-testid)
-- ❌ Shared state between tests
-- ❌ Conditional test logic
-
-- ✅ Testing user behavior
-- ✅ Random test data generation
-- ✅ Stable, semantic selectors
-- ✅ Isolated, independent tests
-- ✅ Deterministic test flow
-
-## Coverage Targets
-
-| Test Type | Target Coverage |
-|-----------|-----------------|
-| Unit (Critical) | >90% |
-| Unit (General) | >80% |
-| Integration | >60% |
-| E2E | Critical paths only |
-
-## Troubleshooting
-
-### Tests Failing with localStorage Errors
-
-The test setup includes mocks for localStorage. Ensure `test-setup.ts` is imported in your test files or configured in vitest.config.ts.
-
-### MSW (Mock Service Worker) Issues
-
-For component tests that make API calls, ensure the mock server is set up:
+**推荐**: 使用 `data-testid` 属性作为主要选择策略
 
 ```typescript
-import { setupMockServer } from '@/test/mocks/server';
+// 在组件中添加 data-testid
+<input data-testid="email-input" />
 
-setupMockServer();
+// 在测试中使用
+await page.fill('[data-testid="email-input"]', 'test@example.com');
 ```
 
-### Hydration Timing Issues
-
-For tests involving auth state hydration, use waitFor or increase timeout:
+使用预定义的选择器:
 
 ```typescript
-await waitFor(() => {
-  expect(useAuthStore.getState()._hasHydrated).toBe(true);
-}, { timeout: 500 });
+import { selectors } from '@/tests/support/helpers/selectors';
+
+test('登录表单测试', async ({ page }) => {
+  await page.goto('/login');
+  await page.fill(selectors.auth.emailInput, 'test@example.com');
+  await page.fill(selectors.auth.passwordInput, 'password');
+  await page.click(selectors.auth.loginButton);
+});
 ```
 
-## Additional Resources
+### 网络请求处理
 
-- [Vitest Documentation](https://vitest.dev/)
-- [Jest Documentation](https://jestjs.io/)
-- [React Testing Library](https://testing-library.com/react)
-- [NestJS Testing](https://docs.nestjs.com/fundamentals/testing)
+```typescript
+test('API 拦截测试', async ({ page }) => {
+  // 模拟 API 响应
+  await page.route('**/api/user', (route) =>
+    route.fulfill({
+      status: 200,
+      body: JSON.stringify({ id: '1', name: '测试用户' }),
+    }),
+  );
+
+  await page.goto('/profile');
+  await expect(page.locator('[data-testid="user-name"]')).toHaveText('测试用户');
+});
+```
+
+---
+
+## 测试优先级
+
+使用优先级标签对测试进行分类:
+
+| 优先级 | 描述 | 执行频率 | 示例 |
+|--------|------|----------|------|
+| **P0** | 关键路径、安全相关 | 每次提交 | 登录流程、支付 |
+| **P1** | 高价值功能 | PR 合并前 | 表单验证、错误处理 |
+| **P2** | 中等优先级 | 每夜构建 | 边界情况、加载状态 |
+| **P3** | 低优先级 | 按需执行 | 可选功能 |
+
+### 在测试中使用优先级
+
+```typescript
+test('[P0] 应该能登录', async ({ page }) => { ... });
+test('[P1] 应该显示错误消息', async ({ page }) => { ... });
+test('[P2] 应该记住登录状态', async ({ page }) => { ... });
+```
+
+---
+
+## 最佳实践
+
+### ✅ 应该做的
+
+1. **使用 Given-When-Then 结构**
+   ```typescript
+   test('应该登录成功', async ({ page }) => {
+     // GIVEN: 用户在登录页
+     await page.goto('/login');
+
+     // WHEN: 输入凭证并提交
+     await page.fill('[data-testid="email-input"]', 'user@example.com');
+     await page.click('[data-testid="login-button"]');
+
+     // THEN: 导航到仪表板
+     await expect(page).toHaveURL('/dashboard');
+   });
+   ```
+
+2. **使用 data-testid 选择器**
+   ```typescript
+   // ✅ 稳定
+   await page.click('[data-testid="submit-button"]');
+
+   // ❌ 脆弱
+   await page.click('.btn-primary');
+   ```
+
+3. **一个测试一个断言**
+   ```typescript
+   // ✅ 原子化测试
+   test('应该显示错误消息', async ({ page }) => {
+     await page.goto('/login');
+     await page.click('[data-testid="login-button"]');
+     await expect(page.locator('[data-testid="error"]')).toBeVisible();
+   });
+   ```
+
+4. **使用数据工厂生成测试数据**
+   ```typescript
+   // ✅ 随机数据
+   const user = userFactory.createUser();
+   await page.fill('[data-testid="email-input"]', user.email);
+   ```
+
+### ❌ 不应该做的
+
+1. **避免硬编码等待**
+   ```typescript
+   // ❌ 错误
+   await page.waitForTimeout(2000);
+
+   // ✅ 正确
+   await expect(page.locator('[data-testid="result"]')).toBeVisible();
+   ```
+
+2. **避免条件测试逻辑**
+   ```typescript
+   // ❌ 错误
+   if (await element.isVisible()) {
+     await element.click();
+   }
+
+   // ✅ 正确
+   await expect(element).toBeVisible();
+   await element.click();
+   ```
+
+3. **避免测试实现细节**
+   ```typescript
+   // ❌ 测试内部状态
+   expect(component.state.loading).toBe(false);
+
+   // ✅ 测试用户可见行为
+   await expect(page.locator('[data-testid="loading"]')).not.toBeVisible();
+   ```
+
+---
+
+## 调试测试
+
+### 使用 Trace Viewer
+
+失败的测试会自动保存 trace 信息:
+
+```bash
+# 查看 trace
+npx playwright show-trace test-results/[test-name]/trace.zip
+```
+
+### 使用截图和视频
+
+失败时自动捕获截图和视频，保存在 `test-results/` 目录。
+
+### 调试模式
+
+```bash
+# 启动调试模式
+pnpm test:e2e:debug
+
+# 或使用 Playwright Inspector
+npx playwright test --debug
+```
+
+---
+
+## CI/CD 集成
+
+测试在 CI 环境中运行时:
+
+1. 自动重试失败测试 (最多 2 次)
+2. 生成 JUnit XML 报告
+3. 生成 HTML 报告
+4. 禁用 `test.only`
+
+### CI 配置示例
+
+```yaml
+- name: Run E2E tests
+  run: pnpm test:e2e
+  env:
+    BASE_URL: http://localhost:5173
+    CI: true
+```
+
+---
+
+## 数据工厂
+
+### UserFactory
+
+生成测试用户数据:
+
+```typescript
+import { UserFactory } from '@/tests/support/fixtures/factories/user-factory';
+
+const factory = new UserFactory();
+
+// 创建默���用户
+const user = factory.createUser();
+
+// 创建自定义用户
+const admin = factory.createUser({
+  email: 'admin@example.com',
+  role: 'admin',
+});
+
+// 创建多个用户
+const users = factory.createUsers(5);
+
+// 自动清理 (在测试结束后)
+await factory.cleanup();
+```
+
+---
+
+## 故障排查
+
+### 浏览器未安装
+
+```bash
+npx playwright install
+```
+
+### 端口冲突
+
+确保 `BASE_URL` 指向的应用正在运行:
+
+```bash
+# 启动应用
+pnpm dev
+
+# 在另一个终端运行测试
+pnpm test:e2e
+```
+
+### 超时错误
+
+在 `playwright.config.ts` 中调整超时设置:
+
+```typescript
+timeout: 60 * 1000,        // 测试超时
+actionTimeout: 15 * 1000,  // 操作超时
+navigationTimeout: 30 * 1000, // 导航超时
+```
+
+---
+
+## 资源
+
+- [Playwright 文档](https://playwright.dev/)
+- [测试最佳实践](https://playwright.dev/docs/best-practices)
+- [选择器指南](https://playwright.dev/docs/selectors)

@@ -56,3 +56,4 @@ coverage
 # MCP configs (project-specific)
 .mcp.json
 .claude/settings.local.json
+test-results/
