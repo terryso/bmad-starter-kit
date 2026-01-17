@@ -3,7 +3,7 @@
 # Version: 6.0.0-alpha.23
 # Date: 2026-01-16T01:54:16.663Z
 
-project_name: cuplayer
+project_name: bmad-starter-kit
 user_skill_level: intermediate
 planning_artifacts: "{project-root}/docs/planning-artifacts"
 implementation_artifacts: "{project-root}/docs/implementation-artifacts"

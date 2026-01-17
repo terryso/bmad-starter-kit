@@ -225,14 +225,14 @@ POST /api/v1/auth/login     // 登录
 **依赖安装**:
 ```bash
 # 状态管理
-pnpm --filter @cuplayer/web add zustand
+pnpm --filter @bmad-starter-kit/web add zustand
 
 # HTTP 客户端
-pnpm --filter @cuplayer/web add axios
+pnpm --filter @bmad-starter-kit/web add axios
 
 # 表单验证 (如未安装)
-pnpm --filter @cuplayer/web add react-hook-form @hookform/resolvers
-pnpm --filter @cuplayer/web add zod
+pnpm --filter @bmad-starter-kit/web add react-hook-form @hookform/resolvers
+pnpm --filter @bmad-starter-kit/web add zod
 ```
 
 **认证状态管理 (Zustand)**:
@@ -403,8 +403,8 @@ apps/web/src/
 
 **Monorepo 类型共享**:
 ```typescript
-// 从 @cuplayer/shared 导入类型
-import type { RegisterDto, LoginDto, User } from '@cuplayer/shared';
+// 从 @bmad-starter-kit/shared 导入类型
+import type { RegisterDto, LoginDto, User } from '@bmad-starter-kit/shared';
 ```
 
 **与后续 Story 的衔接**:
@@ -483,10 +483,10 @@ import type { RegisterDto, LoginDto, User } from '@cuplayer/shared';
 **测试命令:**
 ```bash
 # 1. 启动后端
-pnpm --filter @cuplayer/api start:dev
+pnpm --filter @bmad-starter-kit/api start:dev
 
 # 2. 启动前端
-pnpm --filter @cuplayer/web dev
+pnpm --filter @bmad-starter-kit/web dev
 
 # 3. 测试注册流程
 # 访问 /register，填写表单，提交

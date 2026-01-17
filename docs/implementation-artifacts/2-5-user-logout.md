@@ -255,8 +255,8 @@ apps/web/src/
 
 **Monorepo 类型共享**:
 ```typescript
-// 从 @cuplayer/shared 导入类型
-import type { ApiResponse, JwtPayload } from '@cuplayer/shared';
+// 从 @bmad-starter-kit/shared 导入类型
+import type { ApiResponse, JwtPayload } from '@bmad-starter-kit/shared';
 ```
 
 ### Common Pitfalls to Avoid
@@ -318,10 +318,10 @@ import type { ApiResponse, JwtPayload } from '@cuplayer/shared';
 **测试命令:**
 ```bash
 # 1. 启动后端
-pnpm --filter @cuplayer/api start:dev
+pnpm --filter @bmad-starter-kit/api start:dev
 
 # 2. 启动前端
-pnpm --filter @cuplayer/web dev
+pnpm --filter @bmad-starter-kit/web dev
 
 # 3. 测试登出流程
 # 1. 登录

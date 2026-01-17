@@ -33,7 +33,7 @@ Status: done
   - [x] 2.1 创建 `dto/login.dto.ts`
   - [x] 2.2 添加 email 验证 (IsEmail, IsNotEmpty)
   - [x] 2.3 添加 password 验证 (IsString, IsNotEmpty)
-  - [x] 2.4 从 @cuplayer/shared 引入 LoginDto 作为补充
+  - [x] 2.4 从 @bmad-starter-kit/shared 引入 LoginDto 作为补充
 
 - [x] 3. 实现 AuthService 登录逻辑 (AC: #1, #2, #3, #4, #7)
   - [x] 3.1 添加 validateUser 方法 (验证邮箱密码)
@@ -52,7 +52,7 @@ Status: done
   - [x] 4.6 设置 HttpOnly Cookie 存储 Refresh Token
 
 - [x] 5. 更新 shared 类型 (AC: #6, #7)
-  - [x] 5.1 在 @cuplayer/shared 中添加 LoginResponseDto 接口
+  - [x] 5.1 在 @bmad-starter-kit/shared 中添加 LoginResponseDto 接口
   - [x] 5.2 定义 TokenPayload 类型 (sub, email)
 
 - [x] 6. 创建 JwtStrategy (为 Story 2.3 准备)
@@ -205,9 +205,9 @@ export interface LoginDto {
 **新增依赖安装**:
 ```bash
 # JWT 认证
-pnpm --filter @cuplayer/api add @nestjs/jwt
-pnpm --filter @cuplayer/api add @nestjs/passport passport passport-jwt
-pnpm --filter @cuplayer/api add -D @types/passport-jwt
+pnpm --filter @bmad-starter-kit/api add @nestjs/jwt
+pnpm --filter @bmad-starter-kit/api add @nestjs/passport passport passport-jwt
+pnpm --filter @bmad-starter-kit/api add -D @types/passport-jwt
 ```
 
 **环境变量配置** (`.env`):
@@ -340,7 +340,7 @@ import { Controller, Post, Body, Res, HttpCode, HttpStatus } from '@nestjs/commo
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { ApiResponse } from '@cuplayer/shared';
+import { ApiResponse } from '@bmad-starter-kit/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -484,9 +484,9 @@ apps/api/src/
 ### Project Structure Notes
 
 **Monorepo 集成**:
-1. 依赖安装使用 `pnpm --filter @cuplayer/api add ...`
-2. shared 类型导入使用 `import { ... } from '@cuplayer/shared'`
-3. LoginDto 已在 @cuplayer/shared 中定义，可直接使用或扩展
+1. 依赖安装使用 `pnpm --filter @bmad-starter-kit/api add ...`
+2. shared 类型导入使用 `import { ... } from '@bmad-starter-kit/shared'`
+3. LoginDto 已在 @bmad-starter-kit/shared 中定义，可直接使用或扩展
 
 **与后续 Story 的衔接**:
 - **Story 2.3 (JWT Guard)**: 使用本 Story 的 JwtStrategy 验证 Access Token
@@ -571,7 +571,7 @@ apps/api/src/
 **测试命令:**
 ```bash
 # 1. 启动后端
-pnpm --filter @cuplayer/api start:dev
+pnpm --filter @bmad-starter-kit/api start:dev
 
 # 2. 先注册一个测试用户 (如果还没有)
 curl -X POST http://localhost:3000/api/v1/auth/register \

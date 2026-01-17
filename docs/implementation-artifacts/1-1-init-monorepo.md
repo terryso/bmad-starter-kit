@@ -29,7 +29,7 @@ Status: done
   - [x] 1.4 创建 `packages/` 目录
 
 - [x] 2. 更新根目录 package.json (AC: #3, #4)
-  - [x] 2.1 更新 `name` 为 `cuplayer-monorepo`
+  - [x] 2.1 更新 `name` 为 `bmad-starter-kit`
   - [x] 2.2 添加根脚本: `dev`, `build`, `lint`
   - [x] 2.3 添加开发依赖: `concurrently`, `turbo`
 
@@ -63,7 +63,7 @@ Status: done
 
 **目标结构:**
 ```
-cuplayer/
+bmad-starter-kit/
 ├── apps/
 │   ├── web/                 # 前端 (React + Vite)
 │   └── api/                 # 后端 (NestJS)
@@ -86,7 +86,7 @@ packages:
 **根 package.json 结构:**
 ```json
 {
-  "name": "cuplayer-monorepo",
+  "name": "bmad-starter-kit",
   "private": true,
   "scripts": {
     "dev": "concurrently \"pnpm --filter web dev\" \"pnpm --filter api start:watch\"",
@@ -222,7 +222,7 @@ claude-opus-4-5-20251101
 1. 创建 `pnpm-workspace.yaml` 配置文件，定义 apps/* 和 packages/* 工作区
 2. 创建 `apps/` 和 `packages/` 空目录
 3. 更新根 `package.json`:
-   - name 改为 `cuplayer-monorepo`
+   - name 改为 `bmad-starter-kit`
    - 添加 Monorepo 管理脚本: dev, build, lint
    - 保留原有脚本为 `dev:legacy` 和 `build:dev`
    - 添加开发依赖: concurrently ^8.2.2, turbo ^1.11.0

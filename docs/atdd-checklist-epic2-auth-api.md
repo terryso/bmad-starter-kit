@@ -271,7 +271,7 @@ describe('My Test', () => {
 - [x] Create `auth-api.integration.spec.ts` with test cases
 - [ ] Update `__mocks__/prisma-client.ts` to add `deleteMany()` method
 - [ ] Install missing dependencies: `@nestjs/config` (if not present)
-- [ ] Run test: `pnpm --filter @cuplayer/api test auth-api.integration.spec.ts`
+- [ ] Run test: `pnpm --filter @bmad-starter-kit/api test auth-api.integration.spec.ts`
 - [ ] ✅ Test passes (green phase)
 
 **Estimated Effort:** 0.5 hours
@@ -286,7 +286,7 @@ describe('My Test', () => {
 
 - [ ] Verify cookie parameters match implementation
 - [ ] Update mock to properly track cookie calls
-- [ ] Run test: `pnpm --filter @cuplayer/api test auth-api.integration.spec.ts`
+- [ ] Run test: `pnpm --filter @bmad-starter-kit/api test auth-api.integration.spec.ts`
 - [ ] ✅ Test passes (green phase)
 
 **Estimated Effort:** 0.25 hours
@@ -301,7 +301,7 @@ describe('My Test', () => {
 
 - [ ] Update RegisterDto validation to be tested properly
 - [ ] Use class-validator's ValidationError in test
-- [ ] Run test: `pnpm --filter @cuplayer/api test auth-api.integration.spec.ts`
+- [ ] Run test: `pnpm --filter @bmad-starter-kit/api test auth-api.integration.spec.ts`
 - [ ] ✅ Test passes (green phase)
 
 **Estimated Effort:** 0.25 hours
@@ -312,19 +312,19 @@ describe('My Test', () => {
 
 ```bash
 # Run all API integration tests
-pnpm --filter @cuplayer/api test
+pnpm --filter @bmad-starter-kit/api test
 
 # Run specific test file
-pnpm --filter @cuplayer/api test auth-api.integration.spec.ts
+pnpm --filter @bmad-starter-kit/api test auth-api.integration.spec.ts
 
 # Run tests in watch mode
-pnpm --filter @cuplayer/api test --watch
+pnpm --filter @bmad-starter-kit/api test --watch
 
 # Run tests with coverage
-pnpm --filter @cuplayer/api test --coverage
+pnpm --filter @bmad-starter-kit/api test --coverage
 
 # Debug specific test
-pnpm --filter @cuplayer/api test --testNamePattern="should return 201"
+pnpm --filter @bmad-starter-kit/api test --testNamePattern="should return 201"
 ```
 
 ---
@@ -344,7 +344,7 @@ pnpm --filter @cuplayer/api test --testNamePattern="should return 201"
 
 ```bash
 # Run tests to see current status
-pnpm --filter @cuplayer/api test auth-api.integration.spec.ts
+pnpm --filter @bmad-starter-kit/api test auth-api.integration.spec.ts
 ```
 
 **Note:** Since Epic 2 is already implemented, these tests will likely pass or have minor configuration issues. The focus is on ensuring proper test coverage.
@@ -384,7 +384,7 @@ pnpm --filter @cuplayer/api test auth-api.integration.spec.ts
 ## Next Steps
 
 1. **Review this checklist** with team in standup or planning
-2. **Run tests** to see current status: `pnpm --filter @cuplayer/api test`
+2. **Run tests** to see current status: `pnpm --filter @bmad-starter-kit/api test`
 3. **Fix any configuration issues** to make tests pass
 4. **Add more test scenarios** based on test-design document:
    - Input validation edge cases
@@ -412,7 +412,7 @@ See `tea-index.csv` for complete knowledge fragment mapping.
 
 ### Initial Test Run (RED Phase Verification)
 
-**Command:** `pnpm --filter @cuplayer/api test auth-api.integration.spec.ts`
+**Command:** `pnpm --filter @bmad-starter-kit/api test auth-api.integration.spec.ts`
 
 **Status:** Tests need to be run to verify current status
 

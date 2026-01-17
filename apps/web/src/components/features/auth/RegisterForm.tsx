@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
-import type { CreateUserDto } from '@cuplayer/shared';
+import type { CreateUserDto } from '@bmad-starter-kit/shared';
 
 const registerSchema = z.object({
   name: z.string().min(1, '请输入姓名').min(2, '姓名至少需要 2 位'),

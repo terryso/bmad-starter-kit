@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth.store';
 import { authApi } from '@/lib/api';
-import type { LoginDto } from '@cuplayer/shared';
+import type { LoginDto } from '@bmad-starter-kit/shared';
 
 const loginSchema = z.object({
   email: z.string().email('请输入有效的邮箱地址'),

@@ -49,23 +49,31 @@ async function bootstrap() {
     ? process.env.FRONTEND_URL.split(',').map((s) => s.trim())
     : ['http://localhost:8080'];
 
+  const port = process.env.PORT || 3000;
+  const serverOrigin = `http://localhost:${port}`;
+
   app.enableCors({
     origin: (origin, callback) => {
       // 允许无 origin 的请求 (如移动应用、Postman)
       if (!origin) return callback(null, true);
 
+      // 允许配置的前端来源
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('CORS 不允许的来源'), false);
+        return callback(null, true);
       }
+
+      // 允许来自服务器自己的 origin (如 Vite 开发代理使用 changeOrigin)
+      if (origin === serverOrigin) {
+        return callback(null, true);
+      }
+
+      callback(new Error('CORS 不允许的来源'), false);
     },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
   });
 
-  const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`🚀 API server running on http://localhost:${port}/api`);
 }

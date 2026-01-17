@@ -8,7 +8,7 @@ Status: done
 
 作为 新用户,
 我想要 使用邮箱和密码注册账号,
-以便 我可以开始使用 cuplayer 的功能.
+以便 我可以开始使用 bmad-starter-kit 的功能.
 
 ## Acceptance Criteria
 
@@ -35,7 +35,7 @@ Status: done
   - [x] 2.2 添加 email 验证 (IsEmail, IsNotEmpty)
   - [x] 2.3 添加 password 验证 (IsString, MinLength(8), IsNotEmpty)
   - [x] 2.4 添加 name 验证 (IsString, IsNotEmpty)
-  - [x] 2.5 从 @cuplayer/shared 引入 CreateUserDto 作为补充
+  - [x] 2.5 从 @bmad-starter-kit/shared 引入 CreateUserDto 作为补充
 
 - [x] 3. 实现 AuthService 注册逻辑 (AC: #4, #5, #7)
   - [x] 3.1 注入 PrismaService
@@ -59,7 +59,7 @@ Status: done
   - [x] 5.4 在 main.ts 全局启用 ValidationPipe
 
 - [x] 6. 更新 shared 类型 (如需要)
-  - [x] 6.1 确认 CreateUserDto 在 @cuplayer/shared 中存在
+  - [x] 6.1 确认 CreateUserDto 在 @bmad-starter-kit/shared 中存在
   - [x] 6.2 如需要，补充缺失字段
 
 - [x] 7. 集成到 AppModule
@@ -192,7 +192,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
 Story 1.4 创建了共享类型包:
 - ✅ `CreateUserDto` 已在 `packages/shared/src/types/user.types.ts` 定义
 - ✅ `ApiResponse<T>` 和 `ApiError` 已定义
-- ✅ @cuplayer/shared 可在 apps/api 中导入
+- ✅ @bmad-starter-kit/shared 可在 apps/api 中导入
 
 **可用类型**:
 ```typescript
@@ -221,11 +221,11 @@ export interface LoginDto {
 **依赖安装**:
 ```bash
 # bcrypt 密码加密
-pnpm --filter @cuplayer/api add bcrypt
-pnpm --filter @cuplayer/api add -D @types/bcrypt
+pnpm --filter @bmad-starter-kit/api add bcrypt
+pnpm --filter @bmad-starter-kit/api add -D @types/bcrypt
 
 # 数据验证
-pnpm --filter @cuplayer/api add class-validator class-transformer
+pnpm --filter @bmad-starter-kit/api add class-validator class-transformer
 ```
 
 **NestJS 模块结构** (来源: `docs/planning-artifacts/architecture.md#Structure Patterns`)
@@ -308,7 +308,7 @@ export class AuthService {
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
-import { ApiResponse } from '@cuplayer/shared';
+import { ApiResponse } from '@bmad-starter-kit/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -404,8 +404,8 @@ apps/api/src/
 ### Project Structure Notes
 
 **Monorepo 集成**:
-1. 依赖安装使用 `pnpm --filter @cuplayer/api add ...`
-2. shared 类型导入使用 `import { ... } from '@cuplayer/shared'`
+1. 依赖安装使用 `pnpm --filter @bmad-starter-kit/api add ...`
+2. shared 类型导入使用 `import { ... } from '@bmad-starter-kit/shared'`
 3. PrismaService 通过 @Global 装饰器全局可用，无需在 AuthModule 的 imports 中声明
 
 **与后续 Story 的衔接**:
@@ -471,7 +471,7 @@ apps/api/src/
 **测试命令:**
 ```bash
 # 1. 启动后端
-pnpm --filter @cuplayer/api start:dev
+pnpm --filter @bmad-starter-kit/api start:dev
 
 # 2. 测试注册成功
 curl -X POST http://localhost:3000/api/v1/auth/register \

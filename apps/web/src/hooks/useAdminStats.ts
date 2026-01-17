@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api';
-import type { SystemStats } from '@cuplayer/shared';
+import type { SystemStats } from '@bmad-starter-kit/shared';
 
 /**
  * React Query hook for fetching system statistics

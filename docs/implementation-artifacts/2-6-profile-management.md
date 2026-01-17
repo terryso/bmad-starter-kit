@@ -212,7 +212,7 @@ export class UsersModule {}
 ```typescript
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { User } from '@cuplayer/shared';
+import type { User } from '@bmad-starter-kit/shared';
 
 @Injectable()
 export class UsersService {
@@ -275,8 +275,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import type { ApiResponse, JwtPayload } from '@cuplayer/shared';
-import type { User } from '@cuplayer/shared';
+import type { ApiResponse, JwtPayload } from '@bmad-starter-kit/shared';
+import type { User } from '@bmad-starter-kit/shared';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -586,8 +586,8 @@ apps/web/src/
 
 **Monorepo 类型共享**:
 ```typescript
-// 从 @cuplayer/shared 导入类型
-import type { User, ApiResponse, JwtPayload } from '@cuplayer/shared';
+// 从 @bmad-starter-kit/shared 导入类型
+import type { User, ApiResponse, JwtPayload } from '@bmad-starter-kit/shared';
 
 // packages/shared/src/types/user.types.ts 可能需要添加:
 export interface UpdateProfileRequest {
@@ -659,10 +659,10 @@ export interface UpdateProfileRequest {
 **测试命令:**
 ```bash
 # 1. 启动后端
-pnpm --filter @cuplayer/api start:dev
+pnpm --filter @bmad-starter-kit/api start:dev
 
 # 2. 启动前端
-pnpm --filter @cuplayer/web dev
+pnpm --filter @bmad-starter-kit/web dev
 
 # 3. 测试用户资料流程
 # 1. 登录
@@ -684,8 +684,8 @@ curl -X PUT http://localhost:3000/api/v1/users \
   -d '{"name": "新姓名"}'
 
 # 5. 单元测试
-pnpm --filter @cuplayer/api test users.service.spec.ts
-pnpm --filter @cuplayer/api test users.controller.spec.ts
+pnpm --filter @bmad-starter-kit/api test users.service.spec.ts
+pnpm --filter @bmad-starter-kit/api test users.controller.spec.ts
 ```
 
 ### Security Considerations

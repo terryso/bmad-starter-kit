@@ -421,7 +421,7 @@ export class AuthController {
 **测试命令:**
 ```bash
 # 1. 启动后端
-pnpm --filter @cuplayer/api start:dev
+pnpm --filter @bmad-starter-kit/api start:dev
 
 # 2. 先登录获取 Token
 LOGIN_RESPONSE=$(curl -s -X POST http://localhost:3000/api/v1/auth/login \

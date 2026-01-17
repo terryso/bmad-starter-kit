@@ -45,12 +45,12 @@ Status: done
 
 - [x] 4. 生成 Prisma Client (AC: #6)
   - [x] 4.1 在 `apps/api/package.json` 添加 prisma 脚本
-  - [x] 4.2 执行 `pnpm --filter @cuplayer/api prisma generate`
+  - [x] 4.2 执行 `pnpm --filter @bmad-starter-kit/api prisma generate`
   - [x] 4.3 验证 `node_modules/.prisma/client` 生成成功
 
 - [x] 5. 创建数据库表 (AC: #7)
   - [x] 5.1 配置 Supabase 项目连接字符串
-  - [x] 5.2 执行 `pnpm --filter @cuplayer/api prisma db push`
+  - [x] 5.2 执行 `pnpm --filter @bmad-starter-kit/api prisma db push`
   - [x] 5.3 在 Supabase 控制台验证 User 表创建成功
 
 - [x] 6. 创建 Prisma 服务模块 (AC: #8)
