@@ -76,11 +76,13 @@ export class AuthController {
     const result = await this.authService.login(dto.email, dto.password);
 
     // Set HttpOnly Cookie with Refresh Token
-    const sameSiteValue = process.env.COOKIE_SAME_SITE === 'strict' ? 'strict' : 'lax';
+    // sameSite: 'none' 用于跨域场景 (如 Surge + Render)，必须配合 secure: true
+    const sameSiteValue = process.env.COOKIE_SAME_SITE || 'lax';
+    const isSecure = process.env.NODE_ENV === 'production' || sameSiteValue === 'none';
     response.cookie('refresh_token', result.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: sameSiteValue,
+      secure: isSecure,
+      sameSite: sameSiteValue as 'strict' | 'lax' | 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
       path: '/',
     });
@@ -145,11 +147,12 @@ export class AuthController {
 
     // Clear the HttpOnly Cookie by setting maxAge to 0
     // Note: Parameters must match the cookie setting exactly
-    const sameSiteValue = process.env.COOKIE_SAME_SITE === 'strict' ? 'strict' : 'lax';
+    const sameSiteValue = process.env.COOKIE_SAME_SITE || 'lax';
+    const isSecure = process.env.NODE_ENV === 'production' || sameSiteValue === 'none';
     response.clearCookie('refresh_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: sameSiteValue,
+      secure: isSecure,
+      sameSite: sameSiteValue as 'strict' | 'lax' | 'none',
       path: '/',
     });
 
