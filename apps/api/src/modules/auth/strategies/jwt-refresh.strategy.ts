@@ -22,15 +22,39 @@ const getJwtSecret = (): string => {
   return secret || 'test-secret-key-do-not-use-in-production';
 };
 
+/**
+ * Extract refresh token from cookie
+ * Handles both parsed cookies (request.cookies) and raw Cookie header
+ * @param request Express request object
+ * @returns Refresh token string or null
+ */
+const extractRefreshToken = (request: any): string | null => {
+  // First try parsed cookies (cookie-parser middleware)
+  if (request?.cookies?.refresh_token) {
+    return request.cookies.refresh_token;
+  }
+
+  // Fallback: parse from Cookie header (for cross-origin scenarios)
+  if (request?.headers?.cookie) {
+    const cookies: Record<string, string> = {};
+    request.headers.cookie.split(';').forEach((cookie: string) => {
+      const [name, value] = cookie.trim().split('=');
+      if (name && value) {
+        cookies[name] = value;
+      }
+    });
+    return cookies.refresh_token || null;
+  }
+
+  return null;
+};
+
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request) => {
-          // Extract refresh token from HttpOnly cookie
-          return request?.cookies?.refresh_token;
-        },
+        extractRefreshToken,
       ]),
       ignoreExpiration: false,
       secretOrKey: getJwtSecret(),
