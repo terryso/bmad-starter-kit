@@ -29,11 +29,11 @@ const App = () => (
           {/* 公开路由 */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/showcase" element={<Showcase />} />
 
           {/* 受保护的路由 */}
           <Route path="/" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/showcase" element={<ProtectedRoute><Showcase /></ProtectedRoute>} />
 
           {/* 管理员路由 */}
           <Route path="/admin" element={<ProtectedRoute><Stats /></ProtectedRoute>} />

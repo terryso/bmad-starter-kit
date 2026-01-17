@@ -8,6 +8,7 @@ import { ShowcaseGrid } from '@/components/showcase/ShowcaseGrid';
 import { ShowcaseFilters } from '@/components/showcase/ShowcaseFilters';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 export default function ShowcasePage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -66,24 +67,24 @@ export default function ShowcasePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* 页面头部 */}
-      <div className="border-b border-border bg-card/50">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-2">
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* 页面头部 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Package className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight">项目展示</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="text-2xl font-semibold tracking-tight">项目展示</h1>
+              <p className="text-sm text-muted-foreground mt-1">
                 探索用 BMAD 构建的精彩项目
               </p>
             </div>
           </div>
 
           {/* 搜索框 */}
-          <div className="mt-6 flex gap-2 max-w-md">
+          <div className="flex gap-2 max-w-md">
             <Input
               placeholder="搜索项目名称或描述..."
               value={searchInput}
@@ -97,10 +98,7 @@ export default function ShowcasePage() {
             </Button>
           </div>
         </div>
-      </div>
 
-      {/* 主内容区域 */}
-      <div className="container mx-auto px-4 py-6">
         {/* 筛选栏 */}
         <ShowcaseFilters
           category={category}
@@ -127,6 +125,6 @@ export default function ShowcasePage() {
           }
         />
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
