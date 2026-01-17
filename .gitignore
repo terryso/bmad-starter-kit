@@ -57,3 +57,4 @@ coverage
 .mcp.json
 .claude/settings.local.json
 test-results/
+playwright-report/

@@ -5,10 +5,13 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Get,
+  Query,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ShowcaseService, ProjectPreview } from './showcase.service';
+import { ShowcaseService, ProjectPreview, ProjectsListResponse } from './showcase.service';
 import { SubmitProjectDto } from './dto/submit-project.dto';
+import { GetProjectsDto } from './dto/get-projects.dto';
 import { JwtAuthGuard } from '../../modules/auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserData } from '../../common/decorators';
 import { ApiResponse } from '@bmad-starter-kit/shared';
@@ -60,6 +63,29 @@ export class ShowcaseController {
       statusCode: HttpStatus.CREATED,
       message: '项目提交成功，等待管理员审核',
       data: project,
+    };
+  }
+
+  /**
+   * 获取公开展示的项目列表
+   * GET /api/v1/showcase/projects
+   *
+   * 无需认证 - 公开接口
+   *
+   * @param params 查询参数（分页、筛选、排序）
+   * @returns 项目列表和分页信息
+   */
+  @Get('projects')
+  @HttpCode(HttpStatus.OK)
+  async getProjects(
+    @Query() params: GetProjectsDto,
+  ): Promise<ApiResponse<ProjectsListResponse>> {
+    const result = await this.showcaseService.getProjects(params);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '获取项目列表成功',
+      data: result,
     };
   }
 }

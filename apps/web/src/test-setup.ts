@@ -22,12 +22,36 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 })) as any;
 
-// Mock ResizeObserver
+// Mock ResizeObserver - needs to be a proper constructor
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 })) as any;
+
+// Create a constructor function for ResizeObserver
+const ResizeObserverMock = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+Object.defineProperty(global, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: ResizeObserverMock,
+});
+
+// Polyfill for hasPointerCapture and setPointerCapture for Radix UI components
+// jsdom doesn't implement these methods, causing Radix UI Select to fail
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = vi.fn(() => false) as any;
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = vi.fn(() => undefined) as any;
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = vi.fn(() => undefined) as any;
+}
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {

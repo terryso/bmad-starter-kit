@@ -36,3 +36,11 @@ export type {
   DeleteResponse,
   IdResponse,
 } from './api.types';
+
+// Showcase types
+export type {
+  Project,
+  ProjectsListResponse,
+  GetProjectsParams,
+  ProjectCategory,
+} from './showcase.types';

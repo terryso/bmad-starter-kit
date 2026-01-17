@@ -11,6 +11,7 @@ import Welcome from "./pages/admin/Welcome";
 import Stats from "./pages/admin/Stats";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Showcase from "./pages/showcase/Showcase";
 import { ProtectedRoute } from "@/components/routes/ProtectedRoute";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 
@@ -28,6 +29,7 @@ const App = () => (
           {/* 公开路由 */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/showcase" element={<Showcase />} />
 
           {/* 受保护的路由 */}
           <Route path="/" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />

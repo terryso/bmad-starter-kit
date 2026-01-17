@@ -13,11 +13,16 @@
     "build:shared": "pnpm --filter @bmad-starter-kit/shared build",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:api": "pnpm --filter @bmad-starter-kit/api test",
+    "test:web": "pnpm --filter @bmad-starter-kit/web test",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:p0": "playwright test --grep \"\\[P0\\]\"",
+    "test:e2e:p1": "playwright test --grep \"\\[P0\\]|\\[P1\\]\"",
+    "test:e2e:showcase": "playwright test showcase-api.spec.ts project-submission.spec.ts"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.0.0",

@@ -8,6 +8,8 @@ import type {
   UpdateUserDto,
   SystemStats,
   UsersListResponse,
+  GetProjectsParams,
+  ProjectsListResponse,
 } from '@bmad-starter-kit/shared';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -155,5 +157,19 @@ export const adminApi = {
       '/api/v1/admin/stats'
     );
     return response.data;
+  },
+};
+
+// Showcase API
+export const showcaseApi = {
+  /**
+   * 获取公开展示的项目列表（无需认证）
+   * @param params 查询参数（分页、筛选、排序）
+   */
+  getProjects: async (params?: GetProjectsParams): Promise<ProjectsListResponse> => {
+    const response = await api.get<ApiResponse<ProjectsListResponse>>('/api/v1/showcase/projects', {
+      params,
+    });
+    return response.data.data;
   },
 };
