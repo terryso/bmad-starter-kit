@@ -10,11 +10,32 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { writeFileSync, unlinkSync, existsSync, readdirSync } from 'fs';
 import { tmpdir } from 'os';
+import { randomBytes } from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Create a temporary preload file with the polyfill
+// Polyfill crypto in the main process FIRST
+if (!globalThis.crypto) {
+  globalThis.crypto = {
+    getRandomValues: (arr) => {
+      const bytes = randomBytes(arr.length);
+      arr.set(bytes);
+      return arr;
+    },
+    randomUUID: () => {
+      const bytes = randomBytes(16);
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      const hex = Array.from(bytes)
+        .map((b) => (b < 16 ? '0' : '') + b.toString(16))
+        .join('');
+      return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+    },
+  };
+}
+
+// Create a temporary preload file with the polyfill for child processes
 const preloadContent = `
 const { randomBytes } = require('crypto');
 if (!globalThis.crypto) {
@@ -23,7 +44,16 @@ if (!globalThis.crypto) {
       const bytes = randomBytes(arr.length);
       arr.set(bytes);
       return arr;
-    }
+    },
+    randomUUID: () => {
+      const bytes = randomBytes(16);
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      const hex = Array.from(bytes)
+        .map((b) => (b < 16 ? '0' : '') + b.toString(16))
+        .join('');
+      return \`\${hex.slice(0, 8)}-\${hex.slice(8, 12)}-\${hex.slice(12, 16)}-\${hex.slice(16, 20)}-\${hex.slice(20, 32)}\`;
+    },
   };
 }
 `;
