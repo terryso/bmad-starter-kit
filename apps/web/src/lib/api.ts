@@ -25,7 +25,12 @@ export const api = axios.create({
 // 请求拦截器 - 自动携带 Token (从 Zustand store 读取)
 api.interceptors.request.use(
   (config) => {
-    // 直接从 Zustand store 读取 accessToken (内存存储)
+    // refresh 请求只依赖 cookie，不需要 Authorization header
+    if (config.url === '/api/v1/auth/refresh') {
+      return config;
+    }
+
+    // 其他请求从 Zustand store 读取 accessToken
     const getAccessToken = useAuthStore.getState().getAccessToken;
     const token = getAccessToken?.();
     if (token) {
