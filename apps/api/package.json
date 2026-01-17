@@ -22,8 +22,10 @@
     "test:e2e:cov": "jest --config=jest-e2e.config.js --runInBand --coverage"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.1.69",
     "@bmad-starter-kit/shared": "workspace:*",
     "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^10.0.0",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
@@ -39,7 +41,8 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.16.3",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

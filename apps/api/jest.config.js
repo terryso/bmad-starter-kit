@@ -19,9 +19,10 @@ module.exports = {
     '^@bmad-starter-kit/shared$': '<rootDir>/../../packages/shared/src/index.ts',
     '^@bmad-starter-kit/shared/(.*)$': '<rootDir>/../../packages/shared/src/$1',
     '@prisma/client': '<rootDir>/src/__mocks__/prisma-client.ts',
+    '@anthropic-ai/claude-agent-sdk': '<rootDir>/src/__mocks__/@anthropic-ai/claude-agent-sdk.ts',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@prisma/client))',
+    'node_modules/(?!(@prisma/client|@anthropic-ai/claude-agent-sdk))',
   ],
   maxWorkers: 1, // Avoid os.availableParallelism() issues
 };
