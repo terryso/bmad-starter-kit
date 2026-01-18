@@ -444,6 +444,73 @@ That's it!`;
         'Failed to fetch repository information'
       );
     });
+
+    it('should override Claude language with GitHub API language', async () => {
+      // Claude returns wrong language (Swift)
+      const claudeResponse = {
+        repositoryName: 'test-repo',
+        description: 'Test project',
+        owner: 'testuser',
+        stars: 100,
+        forks: 50,
+        openIssues: 5,
+        language: 'Swift', // Claude guessed wrong
+        topics: ['mobile'],
+        updatedAt: '2025-01-17T00:00:00Z',
+        homepageUrl: null,
+        license: 'MIT',
+        category: 'CLI',
+        suggestedTags: ['tool'],
+      };
+
+      global.fetch = jest.fn().mockImplementation((url: string) => {
+        if (url.includes('api.github.com')) {
+          // GitHub API returns correct language (TypeScript)
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              name: 'test-repo',
+              description: 'Test project',
+              stargazers_count: 100,
+              forks_count: 50,
+              open_issues_count: 5,
+              language: 'TypeScript', // Correct from GitHub API
+              topics: ['cli', 'typescript'],
+              license: { name: 'MIT' },
+              homepage: null,
+              updated_at: '2025-01-17T00:00:00Z',
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: 'msg-123',
+            type: 'message',
+            role: 'assistant',
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(claudeResponse),
+              },
+            ],
+            stop_reason: 'end_turn',
+            model: 'claude-sonnet-4-20250514',
+          }),
+        });
+      }) as jest.Mock;
+
+      const result = await service.fetchProjectInfo(validUrl);
+
+      // GitHub API language should override Claude's guess
+      expect(result.language).toBe('TypeScript');
+      expect(result.language).not.toBe('Swift');
+
+      // Other GitHub API values should also be used
+      expect(result.stars).toBe(100);
+      expect(result.forks).toBe(50);
+      expect(result.openIssues).toBe(5);
+    });
   });
 
   describe('parseGitHubUrl (private method)', () => {

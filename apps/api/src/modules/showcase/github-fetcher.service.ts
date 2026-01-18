@@ -185,10 +185,13 @@ export class GithubFetcherService {
       // 6. Parse JSON response
       const jsonData = this.parseJsonResponse(resultText);
 
-      // 7. Normalize empty strings to null for optional fields
-      const normalizedData = this.normalizeOptionalFields(jsonData);
+      // 7. Override with GitHub API data for more reliable fields
+      const enhancedData = this.enrichWithGitHubApiData(jsonData, githubApiData);
 
-      // 8. Zod validation
+      // 8. Normalize empty strings to null for optional fields
+      const normalizedData = this.normalizeOptionalFields(enhancedData);
+
+      // 9. Zod validation
       const validatedData = GitHubProjectResponseSchema.parse(normalizedData);
 
       return validatedData;
@@ -283,6 +286,37 @@ export class GithubFetcherService {
       ...data,
       homepageUrl: data.homepageUrl === '' ? null : data.homepageUrl,
       license: data.license === '' ? null : data.license,
+    };
+  }
+
+  /**
+   * Enrich Claude's response with reliable GitHub API data
+   * Overrides fields that GitHub API provides more accurately
+   */
+  private enrichWithGitHubApiData(
+    claudeData: any,
+    githubApiData?: GitHubAPIRepoData
+  ): any {
+    if (!githubApiData) {
+      return claudeData;
+    }
+
+    return {
+      ...claudeData,
+      // Always use GitHub API's language detection (more reliable than Claude's guess)
+      language: githubApiData.language || claudeData.language,
+      // Use GitHub API values for these numeric fields
+      stars: githubApiData.stargazers_count,
+      forks: githubApiData.forks_count,
+      openIssues: githubApiData.open_issues_count,
+      // Use GitHub API topics if Claude didn't provide better ones
+      topics: claudeData.topics && claudeData.topics.length > 0
+        ? claudeData.topics
+        : githubApiData.topics,
+      // Use GitHub API license if Claude didn't provide one
+      license: claudeData.license || githubApiData.license?.name || null,
+      // Use GitHub API homepage if Claude didn't provide one
+      homepageUrl: claudeData.homepageUrl || githubApiData.homepage || null,
     };
   }
 
