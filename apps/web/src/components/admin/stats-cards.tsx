@@ -1,12 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Users,
-  Video,
-  Disc,
-  Eye,
+  FolderOpen,
+  Clock,
+  Star,
   TrendingUp,
   Calendar,
-  Activity,
+  UserCheck,
 } from 'lucide-react';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -65,13 +65,13 @@ function StatsCardsSkeleton() {
 /**
  * Stats Cards Component
  *
- * Displays system statistics in a grid of metric cards.
+ * Displays BMAD showcase system statistics in a grid of metric cards.
  * Fetches real-time data from the admin stats API.
  *
  * ## Statistics Displayed
- * - Total users, videos, albums, views
- * - New users and videos today
- * - Active users this month
+ * - Total users, projects, pending projects, total stars
+ * - New users and projects today
+ * - New users this month
  *
  * ## Auto-Refresh
  * Data automatically refreshes every 30 seconds to stay current.
@@ -115,22 +115,22 @@ export function StatsCards() {
       description: '注册用户总数',
     },
     {
-      title: '总视频数',
-      value: stats.totalVideos,
-      icon: Video,
-      description: '平台视频总数',
+      title: '总项目数',
+      value: stats.totalProjects,
+      icon: FolderOpen,
+      description: '展示项目总数',
     },
     {
-      title: '总专辑数',
-      value: stats.totalAlbums,
-      icon: Disc,
-      description: '专辑总数',
+      title: '待审核项目',
+      value: stats.pendingProjects,
+      icon: Clock,
+      description: '等待审核',
     },
     {
-      title: '总播放次数',
-      value: stats.totalViews,
-      icon: Eye,
-      description: '累计播放',
+      title: '总星标数',
+      value: stats.totalStars,
+      icon: Star,
+      description: '所有项目星标总和',
     },
     {
       title: '今日新用户',
@@ -139,16 +139,16 @@ export function StatsCards() {
       description: '今日注册',
     },
     {
-      title: '今日新视频',
-      value: stats.newVideosToday,
+      title: '今日新项目',
+      value: stats.newProjectsToday,
       icon: Calendar,
-      description: '今日上传',
+      description: '今日提交',
     },
     {
-      title: '本月活跃用户',
-      value: stats.activeUsersThisMonth,
-      icon: Activity,
-      description: '有活动用户',
+      title: '本月新用户',
+      value: stats.newUsersThisMonth,
+      icon: UserCheck,
+      description: '本月注册',
     },
   ];
 

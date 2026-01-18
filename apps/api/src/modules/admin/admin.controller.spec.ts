@@ -132,6 +132,9 @@ describe('AdminController', () => {
       newUsersToday: 3,
       newUsersThisMonth: 18,
       totalProjects: 10,
+      pendingProjects: 2,
+      totalStars: 123,
+      newProjectsToday: 1,
     };
 
     const expectedResponse = {
@@ -155,6 +158,9 @@ describe('AdminController', () => {
         newUsersToday: 0,
         newUsersThisMonth: 0,
         totalProjects: 0,
+        pendingProjects: 0,
+        totalStars: 0,
+        newProjectsToday: 0,
       };
 
       service.getStats.mockResolvedValue(emptyStats);

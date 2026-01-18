@@ -2,7 +2,7 @@
  * System Statistics Response
  *
  * Response shape for the admin stats endpoint.
- * Contains aggregated statistics about the platform.
+ * Contains aggregated statistics about the BMAD showcase platform.
  */
 export class SystemStatsDto {
   /** Total number of registered users */
@@ -16,6 +16,15 @@ export class SystemStatsDto {
 
   /** Total number of projects in showcase */
   totalProjects: number;
+
+  /** Number of pending projects awaiting review */
+  pendingProjects: number;
+
+  /** Total number of stars across all projects */
+  totalStars: number;
+
+  /** Number of new projects submitted today */
+  newProjectsToday: number;
 }
 
 /**

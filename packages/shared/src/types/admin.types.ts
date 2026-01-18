@@ -1,10 +1,14 @@
 /**
- * System Statistics
+ * System Statistics for BMAD Showcase Platform
  */
 export interface SystemStats {
   totalUsers: number;
   newUsersToday: number;
   newUsersThisMonth: number;
+  totalProjects: number;
+  pendingProjects: number;
+  totalStars: number;
+  newProjectsToday: number;
 }
 
 /**

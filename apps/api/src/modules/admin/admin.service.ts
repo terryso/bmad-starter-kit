@@ -151,7 +151,15 @@ export class AdminService {
     monthStart.setHours(0, 0, 0, 0);
 
     // Parallel queries for optimal performance
-    const [totalUsers, newUsersToday, newUsersThisMonth, totalProjects] = await Promise.all([
+    const [
+      totalUsers,
+      newUsersToday,
+      newUsersThisMonth,
+      totalProjects,
+      pendingProjects,
+      totalStars,
+      newProjectsToday,
+    ] = await Promise.all([
       // Total users
       this.prismaUser.count(),
 
@@ -175,6 +183,36 @@ export class AdminService {
 
       // Total projects in showcase
       this.prismaProject.count(),
+
+      // Pending projects awaiting review
+      this.prismaProject.count({
+        where: {
+          status: 'PENDING',
+        },
+      }),
+
+      // Total stars across all projects (sum of stars, excluding null values)
+      this.prismaProject
+        .aggregate({
+          where: {
+            stars: {
+              not: null,
+            },
+          },
+          _sum: {
+            stars: true,
+          },
+        })
+        .then((result) => result._sum.stars || 0),
+
+      // New projects submitted today
+      this.prismaProject.count({
+        where: {
+          createdAt: {
+            gte: todayStart,
+          },
+        },
+      }),
     ]);
 
     return {
@@ -182,6 +220,9 @@ export class AdminService {
       newUsersToday,
       newUsersThisMonth,
       totalProjects,
+      pendingProjects,
+      totalStars,
+      newProjectsToday,
     };
   }
 
