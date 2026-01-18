@@ -43,4 +43,7 @@ export type {
   ProjectsListResponse,
   GetProjectsParams,
   ProjectCategory,
+  ProjectDetail,
+  RelatedProject,
+  RelatedProjectsResponse,
 } from './showcase.types';

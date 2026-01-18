@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ShowcaseService, ProjectCategory } from './showcase.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GithubFetcherService } from './github-fetcher.service';
@@ -424,6 +424,382 @@ describe('ShowcaseService', () => {
           take: 12,
         })
       );
+    });
+  });
+
+  describe('getProjectById', () => {
+    const createMockProjectDetail = (overrides: any = {}) => ({
+      id: 'project-123',
+      repositoryName: 'test-repo',
+      description: 'Test description',
+      owner: 'testowner',
+      stars: 1234,
+      forks: 56,
+      issues: 12,
+      language: 'TypeScript',
+      topics: ['test', 'testing'],
+      category: 'WEB_APP',
+      suggestedTags: ['test'],
+      screenshotUrl: null,
+      homepageUrl: 'https://test.dev',
+      license: 'MIT',
+      githubUrl: 'https://github.com/testowner/test-repo',
+      createdAt: new Date('2024-01-01T00:00:00.000Z'),
+      githubUpdatedAt: new Date('2024-01-15T10:30:00.000Z'),
+      status: 'APPROVED' as ProjectStatus,
+      submittedBy: {
+        id: 'user-123',
+        name: 'Test User',
+        email: 'test@example.com',
+      },
+      reviewedBy: {
+        id: 'admin-456',
+        name: 'Admin User',
+        email: 'admin@example.com',
+      },
+      reviewedAt: new Date('2024-01-18T10:00:00.000Z'),
+      ...overrides,
+    });
+
+    it('should return APPROVED project details', async () => {
+      const mockProject = createMockProjectDetail();
+      mockPrismaProject.findUnique.mockResolvedValue(mockProject);
+
+      const result = await service.getProjectById('project-123');
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe('project-123');
+      expect(result.repositoryName).toBe('test-repo');
+      expect(result.stars).toBe(1234);
+      expect(result.forks).toBe(56);
+      expect(result.issues).toBe(12);
+      expect(result.language).toBe('TypeScript');
+      expect(result.submittedBy).toBeDefined();
+      expect(result.submittedBy.email).toBe('test@example.com');
+      expect(mockPrismaProject.findUnique).toHaveBeenCalledWith({
+        where: { id: 'project-123' },
+        select: expect.any(Object),
+      });
+    });
+
+    it('should throw NotFoundException for non-existent project', async () => {
+      mockPrismaProject.findUnique.mockResolvedValue(null);
+
+      await expect(service.getProjectById('nonexistent-id'))
+        .rejects.toThrow(NotFoundException);
+
+      await expect(service.getProjectById('nonexistent-id'))
+        .rejects.toThrow('Project not found');
+    });
+
+    it('should throw NotFoundException for PENDING project', async () => {
+      const pendingProject = createMockProjectDetail({ status: 'PENDING' as ProjectStatus });
+      mockPrismaProject.findUnique.mockResolvedValue(pendingProject);
+
+      await expect(service.getProjectById('pending-id'))
+        .rejects.toThrow(NotFoundException);
+
+      await expect(service.getProjectById('pending-id'))
+        .rejects.toThrow('Project not found');
+    });
+
+    it('should throw NotFoundException for REJECTED project', async () => {
+      const rejectedProject = createMockProjectDetail({
+        status: 'REJECTED' as ProjectStatus,
+        rejectionReason: 'Spam',
+      });
+      mockPrismaProject.findUnique.mockResolvedValue(rejectedProject);
+
+      await expect(service.getProjectById('rejected-id'))
+        .rejects.toThrow(NotFoundException);
+    });
+
+    it('should include submitter information', async () => {
+      const mockProject = createMockProjectDetail();
+      mockPrismaProject.findUnique.mockResolvedValue(mockProject);
+
+      const result = await service.getProjectById('project-123');
+
+      expect(result.submittedBy).toBeDefined();
+      expect(result.submittedBy.id).toBe('user-123');
+      expect(result.submittedBy.name).toBe('Test User');
+      expect(result.submittedBy.email).toBe('test@example.com');
+    });
+
+    it('should include reviewer information when reviewed', async () => {
+      const mockProject = createMockProjectDetail();
+      mockPrismaProject.findUnique.mockResolvedValue(mockProject);
+
+      const result = await service.getProjectById('project-123');
+
+      expect(result.reviewedBy).toBeDefined();
+      expect(result.reviewedBy.id).toBe('admin-456');
+      expect(result.reviewedBy.name).toBe('Admin User');
+      expect(result.reviewedAt).toBe('2024-01-18T10:00:00.000Z');
+    });
+
+    it('should return null for reviewedBy when not reviewed', async () => {
+      const unreviewedProject = createMockProjectDetail({
+        reviewedBy: null,
+        reviewedAt: null,
+      });
+      mockPrismaProject.findUnique.mockResolvedValue(unreviewedProject);
+
+      const result = await service.getProjectById('project-123');
+
+      expect(result.reviewedBy).toBeNull();
+      expect(result.reviewedAt).toBeNull();
+    });
+
+    it('should handle null optional fields correctly', async () => {
+      const minimalProject = createMockProjectDetail({
+        forks: null,
+        issues: null,
+        language: null,
+        homepageUrl: null,
+        license: null,
+        screenshotUrl: null,
+        githubUpdatedAt: null,
+      });
+      mockPrismaProject.findUnique.mockResolvedValue(minimalProject);
+
+      const result = await service.getProjectById('project-123');
+
+      expect(result.forks).toBeNull();
+      expect(result.issues).toBeNull();
+      expect(result.language).toBeNull();
+      expect(result.homepageUrl).toBeNull();
+      expect(result.license).toBeNull();
+      expect(result.githubUpdatedAt).toBeNull();
+    });
+
+    it('should convert dates to ISO strings', async () => {
+      const mockProject = createMockProjectDetail();
+      mockPrismaProject.findUnique.mockResolvedValue(mockProject);
+
+      const result = await service.getProjectById('project-123');
+
+      expect(result.createdAt).toBe('2024-01-01T00:00:00.000Z');
+      expect(result.githubUpdatedAt).toBe('2024-01-15T10:30:00.000Z');
+      expect(result.reviewedAt).toBe('2024-01-18T10:00:00.000Z');
+    });
+  });
+
+  describe('getRelatedProjects', () => {
+    const createMockRelatedProject = (overrides: any = {}) => ({
+      id: 'related-project-1',
+      repositoryName: 'related-repo',
+      description: 'A related project',
+      owner: 'relatedowner',
+      stars: 500,
+      language: 'TypeScript',
+      category: 'WEB_APP',
+      screenshotUrl: null,
+      ...overrides,
+    });
+
+    it('should return projects with same category', async () => {
+      const currentProject = {
+        category: 'WEB_APP',
+        language: 'TypeScript',
+      };
+
+      const relatedProjects = [
+        createMockRelatedProject({ id: 'related-1', category: 'WEB_APP' }),
+        createMockRelatedProject({ id: 'related-2', category: 'WEB_APP' }),
+      ];
+
+      // First call: get current project
+      mockPrismaProject.findUnique.mockResolvedValueOnce(currentProject);
+      // Second call: get related projects (uses findMany in service)
+      mockPrismaProject.findMany.mockResolvedValueOnce(relatedProjects);
+
+      const result = await service.getRelatedProjects('current-project-id');
+
+      expect(result.items).toHaveLength(2);
+      result.items.forEach(p => {
+        expect(p.category).toBe('WEB_APP');
+      });
+    });
+
+    it('should exclude current project from results', async () => {
+      const currentProject = {
+        category: 'WEB_APP',
+        language: 'TypeScript',
+      };
+
+      const relatedProjects = [
+        createMockRelatedProject({ id: 'related-1' }),
+        createMockRelatedProject({ id: 'related-2' }),
+      ];
+
+      mockPrismaProject.findUnique.mockResolvedValueOnce(currentProject);
+      mockPrismaProject.findMany.mockResolvedValueOnce(relatedProjects);
+
+      const result = await service.getRelatedProjects('current-project-id');
+
+      result.items.forEach(p => {
+        expect(p.id).not.toBe('current-project-id');
+      });
+    });
+
+    it('should return maximum 4 related projects', async () => {
+      const currentProject = {
+        category: 'WEB_APP',
+        language: 'TypeScript',
+      };
+
+      const manyRelatedProjects = Array.from({ length: 10 }, (_, i) =>
+        createMockRelatedProject({ id: `related-${i}`, category: 'WEB_APP' })
+      );
+
+      mockPrismaProject.findUnique.mockResolvedValueOnce(currentProject);
+      mockPrismaProject.findMany.mockResolvedValueOnce(manyRelatedProjects);
+
+      const result = await service.getRelatedProjects('current-project-id');
+
+      expect(result.items.length).toBeLessThanOrEqual(4);
+    });
+
+    it('should return exactly 4 projects when 4 are available', async () => {
+      const currentProject = {
+        category: 'WEB_APP',
+        language: 'TypeScript',
+      };
+
+      const relatedProjects = Array.from({ length: 4 }, (_, i) =>
+        createMockRelatedProject({ id: `related-${i}`, category: 'WEB_APP' })
+      );
+
+      mockPrismaProject.findUnique.mockResolvedValueOnce(currentProject);
+      mockPrismaProject.findMany.mockResolvedValueOnce(relatedProjects);
+
+      const result = await service.getRelatedProjects('current-project-id');
+
+      expect(result.items).toHaveLength(4);
+    });
+
+    it('should fallback to same language when same category < 4', async () => {
+      const currentProject = {
+        category: 'WEB_APP',
+        language: 'TypeScript',
+      };
+
+      // Only 2 same category projects
+      const sameCategoryProjects = [
+        createMockRelatedProject({ id: 'same-cat-1', category: 'WEB_APP' }),
+        createMockRelatedProject({ id: 'same-cat-2', category: 'WEB_APP' }),
+      ];
+
+      // 2 same language projects (different category)
+      const sameLanguageProjects = [
+        createMockRelatedProject({ id: 'same-lang-1', category: 'LIBRARY', language: 'TypeScript' }),
+        createMockRelatedProject({ id: 'same-lang-2', category: 'API', language: 'TypeScript' }),
+      ];
+
+      mockPrismaProject.findUnique.mockResolvedValueOnce(currentProject);
+      mockPrismaProject.findMany
+        .mockResolvedValueOnce(sameCategoryProjects)
+        .mockResolvedValueOnce(sameLanguageProjects);
+
+      const result = await service.getRelatedProjects('current-project-id');
+
+      // Should have 4 total: 2 from same category + 2 from same language
+      expect(result.items).toHaveLength(4);
+      expect(result.items.filter(p => p.category === 'WEB_APP')).toHaveLength(2);
+      expect(result.items.filter(p => p.language === 'TypeScript')).toHaveLength(4);
+    });
+
+    it('should return empty array when current project not found', async () => {
+      mockPrismaProject.findUnique.mockResolvedValueOnce(null);
+
+      const result = await service.getRelatedProjects('nonexistent-id');
+
+      expect(result.items).toEqual([]);
+      expect(mockPrismaProject.findUnique).toHaveBeenCalledTimes(1);
+      expect(mockPrismaProject.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should return empty array when no related projects exist', async () => {
+      const currentProject = {
+        category: 'WEB_APP',
+        language: 'TypeScript',
+      };
+
+      mockPrismaProject.findUnique.mockResolvedValueOnce(currentProject);
+      mockPrismaProject.findMany.mockResolvedValueOnce([]);
+
+      const result = await service.getRelatedProjects('unique-project-id');
+
+      expect(result.items).toEqual([]);
+    });
+
+    it('should not fallback to language when current project has no language', async () => {
+      const currentProject = {
+        category: 'WEB_APP',
+        language: null,
+      };
+
+      const sameCategoryProjects = [
+        createMockRelatedProject({ id: 'related-1', category: 'WEB_APP' }),
+      ];
+
+      mockPrismaProject.findUnique.mockResolvedValueOnce(currentProject);
+      mockPrismaProject.findMany.mockResolvedValueOnce(sameCategoryProjects);
+
+      const result = await service.getRelatedProjects('current-project-id');
+
+      // Should only call findMany once (same category only)
+      expect(result.items).toHaveLength(1);
+      expect(mockPrismaProject.findMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('should sort related projects by stars descending', async () => {
+      const currentProject = {
+        category: 'WEB_APP',
+        language: 'TypeScript',
+      };
+
+      const relatedProjects = [
+        createMockRelatedProject({ id: 'related-1', stars: 100 }),
+        createMockRelatedProject({ id: 'related-2', stars: 500 }),
+        createMockRelatedProject({ id: 'related-3', stars: 300 }),
+      ];
+
+      mockPrismaProject.findUnique.mockResolvedValueOnce(currentProject);
+      mockPrismaProject.findMany.mockResolvedValueOnce(relatedProjects);
+
+      await service.getRelatedProjects('current-project-id');
+
+      expect(mockPrismaProject.findMany).toHaveBeenCalledWith({
+        where: expect.objectContaining({
+          status: 'APPROVED',
+          category: 'WEB_APP',
+        }),
+        select: expect.any(Object),
+        take: 4,
+        orderBy: { stars: 'desc' },
+      });
+    });
+
+    it('should only return APPROVED projects', async () => {
+      const currentProject = {
+        category: 'WEB_APP',
+        language: 'TypeScript',
+      };
+
+      mockPrismaProject.findUnique.mockResolvedValueOnce(currentProject);
+      mockPrismaProject.findMany.mockResolvedValueOnce([]);
+
+      await service.getRelatedProjects('current-project-id');
+
+      expect(mockPrismaProject.findMany).toHaveBeenCalledWith({
+        where: expect.objectContaining({
+          status: 'APPROVED',
+        }),
+        select: expect.any(Object),
+        take: 4,
+      });
     });
   });
 });

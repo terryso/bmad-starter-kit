@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GithubFetcherService } from './github-fetcher.service';
@@ -70,6 +71,58 @@ export interface ProjectsListResponse {
     pageSize: number;
     totalPages: number;
   };
+}
+
+/**
+ * 项目详情响应接口
+ */
+export interface ProjectDetailResponse {
+  id: string;
+  repositoryName: string;
+  description: string;
+  owner: string;
+  stars: number;
+  forks: number | null;
+  issues: number | null;
+  language: string | null;
+  topics: string[];
+  category: ProjectCategory;
+  suggestedTags: string[];
+  screenshotUrl: string | null;
+  homepageUrl: string | null;
+  license: string | null;
+  githubUrl: string;
+  createdAt: string;
+  githubUpdatedAt: string | null;
+  submittedBy: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+  reviewedBy: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  reviewedAt: string | null;
+}
+
+/**
+ * 相关项目响应接口
+ */
+export interface RelatedProject {
+  id: string;
+  repositoryName: string;
+  description: string;
+  owner: string;
+  stars: number;
+  language: string | null;
+  category: ProjectCategory;
+  screenshotUrl: string | null;
+}
+
+export interface RelatedProjectsResponse {
+  items: RelatedProject[];
 }
 
 @Injectable()
@@ -230,6 +283,8 @@ export class ShowcaseService {
           description: true,
           owner: true,
           stars: true,
+          forks: true,
+          issues: true,
           language: true,
           topics: true,
           category: true,
@@ -252,5 +307,157 @@ export class ShowcaseService {
         totalPages: Math.ceil(total / pageSize),
       },
     };
+  }
+
+  /**
+   * 获取单个项目详情
+   * @param id 项目 ID
+   * @returns 项目详细信息
+   * @throws NotFoundException 如果项目不存在或未审核通过
+   */
+  async getProjectById(id: string): Promise<ProjectDetailResponse> {
+    const project = await this.prismaProject.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        repositoryName: true,
+        description: true,
+        owner: true,
+        stars: true,
+        forks: true,
+        issues: true,
+        language: true,
+        topics: true,
+        category: true,
+        suggestedTags: true,
+        screenshotUrl: true,
+        homepageUrl: true,
+        license: true,
+        githubUrl: true,
+        createdAt: true,
+        githubUpdatedAt: true,
+        status: true,
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        reviewedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        reviewedAt: true,
+      },
+    });
+
+    // 检查项目是否存在
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    // 检查项目状态 - 只返回已审核通过的项目
+    if (project.status !== ProjectStatus.APPROVED) {
+      throw new NotFoundException('Project not found');
+    }
+
+    return {
+      id: project.id,
+      repositoryName: project.repositoryName,
+      description: project.description,
+      owner: project.owner,
+      stars: project.stars,
+      forks: project.forks,
+      issues: project.issues,
+      language: project.language,
+      topics: project.topics,
+      category: project.category,
+      suggestedTags: project.suggestedTags,
+      screenshotUrl: project.screenshotUrl,
+      homepageUrl: project.homepageUrl,
+      license: project.license,
+      githubUrl: project.githubUrl,
+      createdAt: project.createdAt.toISOString(),
+      githubUpdatedAt: project.githubUpdatedAt?.toISOString() || null,
+      submittedBy: project.submittedBy,
+      reviewedBy: project.reviewedBy,
+      reviewedAt: project.reviewedAt?.toISOString() || null,
+    };
+  }
+
+  /**
+   * 获取相关项目推荐
+   * @param id 当前项目 ID
+   * @returns 相关项目列表（最多 4 个）
+   */
+  async getRelatedProjects(id: string): Promise<RelatedProjectsResponse> {
+    // 首先获取当前项目信息
+    const currentProject = await this.prismaProject.findUnique({
+      where: { id },
+      select: { category: true, language: true },
+    });
+
+    if (!currentProject) {
+      return { items: [] };
+    }
+
+    const limit = 4;
+    let items: RelatedProject[] = [];
+
+    // 1. 优先查找同分类的项目
+    const sameCategoryProjects = await this.prismaProject.findMany({
+      where: {
+        id: { not: id }, // 排除当前项目
+        status: ProjectStatus.APPROVED,
+        category: currentProject.category,
+      },
+      select: {
+        id: true,
+        repositoryName: true,
+        description: true,
+        owner: true,
+        stars: true,
+        language: true,
+        category: true,
+        screenshotUrl: true,
+      },
+      take: limit,
+      orderBy: { stars: 'desc' }, // 按星标数排序
+    });
+
+    items = sameCategoryProjects;
+
+    // 2. 如果同分类项目不足 4 个，补充同语言项目
+    if (items.length < limit && currentProject.language) {
+      const needed = limit - items.length;
+      const sameLanguageProjects = await this.prismaProject.findMany({
+        where: {
+          id: { not: id },
+          status: ProjectStatus.APPROVED,
+          category: { not: currentProject.category }, // 排除已获取的分类
+          language: { contains: currentProject.language, mode: 'insensitive' },
+        },
+        select: {
+          id: true,
+          repositoryName: true,
+          description: true,
+          owner: true,
+          stars: true,
+          language: true,
+          category: true,
+          screenshotUrl: true,
+        },
+        take: needed,
+        orderBy: { stars: 'desc' },
+      });
+
+      items = [...items, ...sameLanguageProjects];
+    }
+
+    return { items };
   }
 }

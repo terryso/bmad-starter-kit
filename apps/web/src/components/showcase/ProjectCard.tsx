@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 import { Star, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import type { Project } from '@bmad-starter-kit/shared';
+import type { Project, RelatedProject } from '@bmad-starter-kit/shared';
 
 interface ProjectCardProps {
-  project: Project;
+  project: Project | RelatedProject;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {

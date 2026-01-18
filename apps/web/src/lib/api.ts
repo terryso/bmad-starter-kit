@@ -10,6 +10,8 @@ import type {
   UsersListResponse,
   GetProjectsParams,
   ProjectsListResponse,
+  ProjectDetail,
+  RelatedProjectsResponse,
 } from '@bmad-starter-kit/shared';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -170,6 +172,28 @@ export const showcaseApi = {
     const response = await api.get<ApiResponse<ProjectsListResponse>>('/api/v1/showcase/projects', {
       params,
     });
+    return response.data.data;
+  },
+
+  /**
+   * 获取单个项目详情（无需认证）
+   * @param id 项目 ID
+   */
+  getProjectById: async (id: string): Promise<ProjectDetail> => {
+    const response = await api.get<ApiResponse<ProjectDetail>>(
+      `/api/v1/showcase/projects/${id}`
+    );
+    return response.data.data;
+  },
+
+  /**
+   * 获取相关项目推荐（无需认证）
+   * @param id 当前项目 ID
+   */
+  getRelatedProjects: async (id: string): Promise<RelatedProjectsResponse> => {
+    const response = await api.get<ApiResponse<RelatedProjectsResponse>>(
+      `/api/v1/showcase/projects/${id}/related`
+    );
     return response.data.data;
   },
 };

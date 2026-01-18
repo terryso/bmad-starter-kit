@@ -7,11 +7,19 @@ import {
   HttpStatus,
   Get,
   Query,
+  Param,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ShowcaseService, ProjectPreview, ProjectsListResponse } from './showcase.service';
+import {
+  ShowcaseService,
+  ProjectPreview,
+  ProjectsListResponse,
+  ProjectDetailResponse,
+  RelatedProjectsResponse,
+} from './showcase.service';
 import { SubmitProjectDto } from './dto/submit-project.dto';
 import { GetProjectsDto } from './dto/get-projects.dto';
+import { GetProjectByIdDto } from './dto/get-project-by-id.dto';
 import { JwtAuthGuard } from '../../modules/auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserData } from '../../common/decorators';
 import { ApiResponse } from '@bmad-starter-kit/shared';
@@ -85,6 +93,52 @@ export class ShowcaseController {
     return {
       statusCode: HttpStatus.OK,
       message: '获取项目列表成功',
+      data: result,
+    };
+  }
+
+  /**
+   * 获取单个项目详情
+   * GET /api/v1/showcase/projects/:id
+   *
+   * 无需认证 - 公开接口
+   *
+   * @param params 包含项目 ID
+   * @returns 项目详细信息
+   */
+  @Get('projects/:id')
+  @HttpCode(HttpStatus.OK)
+  async getProjectById(
+    @Param() params: GetProjectByIdDto,
+  ): Promise<ApiResponse<ProjectDetailResponse>> {
+    const project = await this.showcaseService.getProjectById(params.id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '获取项目详情成功',
+      data: project,
+    };
+  }
+
+  /**
+   * 获取相关项目推荐
+   * GET /api/v1/showcase/projects/:id/related
+   *
+   * 无需认证 - 公开接口
+   *
+   * @param params 包含项目 ID
+   * @returns 相关项目列表
+   */
+  @Get('projects/:id/related')
+  @HttpCode(HttpStatus.OK)
+  async getRelatedProjects(
+    @Param() params: GetProjectByIdDto,
+  ): Promise<ApiResponse<RelatedProjectsResponse>> {
+    const result = await this.showcaseService.getRelatedProjects(params.id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '获取相关项目成功',
       data: result,
     };
   }

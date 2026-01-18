@@ -1,7 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Use environment variables or defaults
+const API_URL = process.env.API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
+
 /**
  * Playwright 配置文件
+ *
+ * 测试分层结构:
+ * - API 测试: tests/api/ - 不需要浏览器，快速执行
+ * - E2E 测试: tests/e2e/ - 需要浏览器，测试用户交互
  *
  * 测试超时配置:
  * - actionTimeout: 15s (操作超时)
@@ -13,9 +21,14 @@ import { defineConfig, devices } from '@playwright/test';
  * - screenshot: 'only-on-failure'
  * - video: 'retain-on-failure'
  * - trace: 'retain-on-failure'
+ *
+ * 运行方式:
+ * - 全部测试: npx playwright test
+ * - 仅 API: npx playwright test --project=api
+ * - 仅 UI (chromium): npx playwright test --project=chromium-ui
  */
 export default defineConfig({
-  // 测试文件目录
+  // 默认测试目录 (向后兼容)
   testDir: './tests/e2e',
 
   // 完全并行执行测试 (提升性能)
@@ -36,11 +49,8 @@ export default defineConfig({
     timeout: 15 * 1000, // 15秒
   },
 
-  // 测试环境配置
+  // 测试环境默认配置
   use: {
-    // 基础 URL (通过环境变量配置)
-    baseURL: process.env.BASE_URL || 'http://localhost:5173',
-
     // 失败时保留追踪信息 (用于调试)
     trace: 'retain-on-failure',
 
@@ -67,19 +77,47 @@ export default defineConfig({
     ['list'],
   ],
 
-  // 测试项目配置 (多浏览器支持)
+  // 测试项目配置
   projects: [
+    // API 测试 - 不需要浏览器，快速执行
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'api',
+      testDir: './tests/api',
+      use: {
+        // API 测试不需要 baseURL
+        // 所有 API URL 通过环境变量 API_URL 配置
+      },
+      // API 测试可以更高并发
+      fullyParallel: true,
     },
+
+    // UI 测试 - 需要浏览器
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: 'chromium-ui',
+      testDir: './tests/e2e',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: BASE_URL,
+      },
     },
+
+    // 多浏览器兼容性测试 (可选，CI 时可跳过以节省时间)
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: 'firefox-ui',
+      testDir: './tests/e2e',
+      use: {
+        ...devices['Desktop Firefox'],
+        baseURL: BASE_URL,
+      },
+    },
+
+    {
+      name: 'webkit-ui',
+      testDir: './tests/e2e',
+      use: {
+        ...devices['Desktop Safari'],
+        baseURL: BASE_URL,
+      },
     },
   ],
 
