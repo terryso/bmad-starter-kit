@@ -7,6 +7,7 @@ import { Search, Plus, User } from 'lucide-react';
 import { ShowcaseGrid } from '@/components/showcase/ShowcaseGrid';
 import { ShowcaseFilters } from '@/components/showcase/ShowcaseFilters';
 import { SubmitProjectDialog } from '@/components/showcase/SubmitProjectDialog';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/auth.store';
@@ -92,6 +93,9 @@ export default function ShowcasePage() {
               <span className="font-semibold text-lg">BMAD 项目展示</span>
             </div>
             <div className="flex items-center gap-2">
+              {/* 主题切换 */}
+              <ThemeToggle />
+
               {isAuthenticated ? (
                 <>
                   <Button variant="ghost" onClick={() => navigate('/showcase/my-projects')}>
