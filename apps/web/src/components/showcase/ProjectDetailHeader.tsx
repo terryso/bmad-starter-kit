@@ -1,10 +1,12 @@
 import { ExternalLink, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { SyncProjectButton } from '@/components/showcase/SyncProjectButton';
 import type { ProjectDetail } from '@bmad-starter-kit/shared';
 
 interface ProjectDetailHeaderProps {
   project: ProjectDetail;
+  onSyncSuccess?: () => void;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -16,7 +18,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTHER: '其他',
 };
 
-export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
+export function ProjectDetailHeader({ project, onSyncSuccess }: ProjectDetailHeaderProps) {
   return (
     <div className="space-y-4">
       {/* 标题和操作按钮 */}
@@ -35,19 +37,25 @@ export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
           </p>
         </div>
 
-        {/* GitHub 按钮 */}
-        <Button asChild variant="default" size="lg">
-          <a
-            href={project.githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="gap-2"
-          >
-            <Github className="w-5 h-5" />
-            查看 GitHub
-            <ExternalLink className="w-4 h-4" />
-          </a>
-        </Button>
+        {/* GitHub 按钮和同步按钮 */}
+        <div className="flex items-center gap-2">
+          <Button asChild variant="default" size="lg">
+            <a
+              href={project.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="gap-2"
+            >
+              <Github className="w-5 h-5" />
+              查看 GitHub
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </Button>
+          <SyncProjectButton
+            projectId={project.id}
+            onSyncSuccess={onSyncSuccess}
+          />
+        </div>
       </div>
 
       {/* 项目描述 */}

@@ -65,6 +65,63 @@ export const selectors = {
     confirmRejectButton: '[data-testid="confirm-reject-button"]',
     pendingCountBadge: '[data-testid="pending-count-badge"]',
   },
+
+  // 项目展示
+  showcase: {
+    projectGrid: '[data-testid="project-grid"]',
+    projectCard: '[data-testid="project-card"]',
+    projectTitle: '[data-testid="project-title"]',
+    projectDescription: '[data-testid="project-description"]',
+    projectStars: '[data-testid="project-stars"]',
+    projectLanguage: '[data-testid="project-language"]',
+    submitProjectButton: '[data-testid="submit-project-button"]',
+    submitProjectDialog: '[data-testid="submit-project-dialog"]',
+    githubUrlInput: '[data-testid="github-url-input"]',
+    submitButton: '[data-testid="submit-button"]',
+    filtersButton: '[data-testid="filters-button"]',
+    filtersDialog: '[data-testid="filters-dialog"]',
+  },
+
+  // 项目详情
+  projectDetail: {
+    header: '[data-testid="project-detail-header"]',
+    title: '[data-testid="project-title"]',
+    description: '[data-testid="project-description"]',
+    stats: '[data-testid="project-stats"]',
+    stars: '[data-testid="project-stars"]',
+    forks: '[data-testid="project-forks"]',
+    openIssues: '[data-testid="project-open-issues"]',
+    tags: '[data-testid="project-tags"]',
+    topics: '[data-testid="project-topics"]',
+    syncButton: '[data-testid="sync-project-button"]',
+    deleteButton: '[data-testid="delete-project-button"]',
+    relatedProjects: '[data-testid="related-projects"]',
+    relatedProjectCard: '[data-testid="related-project-card"]',
+    backButton: '[data-testid="back-button"]',
+    githubLink: '[data-testid="github-link"]',
+  },
+
+  // 我的项目
+  myProjects: {
+    list: '[data-testid="my-projects-list"]',
+    projectItem: '[data-testid="my-project-item"]',
+    projectStatus: '[data-testid="project-status"]',
+    statusPending: '[data-testid="status-pending"]',
+    statusApproved: '[data-testid="status-approved"]',
+    statusRejected: '[data-testid="status-rejected"]',
+    emptyState: '[data-testid="empty-state"]',
+    deleteButton: '[data-testid="delete-project-button"]',
+    deleteConfirmDialog: '[data-testid="delete-confirm-dialog"]',
+    confirmDeleteButton: '[data-testid="confirm-delete-button"]',
+  },
+
+  // 同步项目
+  syncProject: {
+    button: '[data-testid="sync-project-button"]',
+    syncing: '[data-testid="syncing"]',
+    lastSyncedAt: '[data-testid="last-synced-at"]',
+    syncStatus: '[data-testid="sync-status"]',
+  },
 } as const;
 
 /**

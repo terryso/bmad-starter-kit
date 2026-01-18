@@ -62,6 +62,10 @@ model Project {
   topics          String[]                      // GitHub Topics 标签
   githubUpdatedAt DateTime?                    // GitHub 仓库最后更新时间
   homepageUrl     String?                       @db.Text       // 官网 URL
+
+  // 同步相关字段
+  lastSyncedAt    DateTime?                     // 最后同步时间
+  lastSyncStatus  String?                       // 最后同步状态 (SUCCESS, FAILED, RATE_LIMITED)
   license         String?                       // 开源协议
   githubUrl       String          @unique       // GitHub 仓库 URL (唯一)
 

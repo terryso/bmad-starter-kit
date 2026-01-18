@@ -1,7 +1,7 @@
 # Sprint Status Tracking
 # Auto-generated from epics.md by sprint-planning workflow
 
-# generated: 2025-01-17
+# generated: 2025-01-18
 # project: bmad-starter-kit
 # project_key: BSK
 # tracking_system: file-system
@@ -67,18 +67,23 @@ development_status:
   8-6-admin-review-interface: done
   8-7-my-projects-management: done
   8-8-showcase-menu-entry: done
+  8-9-project-info-manual-sync: done
   epic-8-retrospective: optional
 
 # Epic Summary:
 # ============
 # Total Epics: 4
-# Total Stories: 25
+# Total Stories: 26
 # Epic 1: 3 stories (基础设施) - done
 # Epic 2: 6 stories (用户认证) - done
 # Epic 7: 3 stories (系统管理) - done
-# Epic 8: 8 stories (项目展示平台) - backlog
+# Epic 8: 9 stories (项目展示平台) - in-progress (新增 Story 8.9)
 
 # Dependency Chain:
 # ================
-# Epic 1 (无依赖) → Epic 2 (认证) → Epic 7 (系统管理)
+# Epic 1 (无依赖) -> Epic 2 (认证) -> Epic 7 (系统管理)
 # Epic 8 (依赖 Epic 1, 2, 7) - 需要用户认证和管理员功能
+
+# Recent Changes:
+# ==============
+# 2025-01-18: Story 8.9 (项目信息手工同步) - ready-for-dev

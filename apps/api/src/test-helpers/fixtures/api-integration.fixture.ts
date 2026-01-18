@@ -18,6 +18,7 @@ import { AdminController } from '../../modules/admin/admin.controller';
 import { ShowcaseService } from '../../modules/showcase/showcase.service';
 import { ShowcaseController } from '../../modules/showcase/showcase.controller';
 import { GithubFetcherService } from '../../modules/showcase/github-fetcher.service';
+import { SyncCacheService } from '../../modules/showcase/services/sync-cache.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -77,6 +78,7 @@ export class ApiIntegrationFixture {
         UsersService,
         AdminService,
         ShowcaseService,
+        SyncCacheService,
         PrismaService,
         JwtService,
         {
@@ -92,6 +94,22 @@ export class ApiIntegrationFixture {
               category: 'WEB_APP',
               suggestedTags: ['测试'],
               githubUrl: 'https://github.com/testowner/test-repo',
+            }),
+            fetchProjectInfo: jest.fn().mockResolvedValue({
+              repositoryName: 'test-repo',
+              description: 'Test description',
+              owner: 'testowner',
+              stars: 100,
+              forks: 10,
+              openIssues: 5,
+              language: 'TypeScript',
+              topics: ['test'],
+              category: 'WEB_APP',
+              suggestedTags: ['测试'],
+              githubUrl: 'https://github.com/testowner/test-repo',
+              updatedAt: '2025-01-18T00:00:00Z',
+              homepageUrl: null,
+              license: 'MIT',
             }),
           },
         },

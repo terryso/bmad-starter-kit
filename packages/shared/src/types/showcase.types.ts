@@ -68,6 +68,8 @@ export interface ProjectDetail {
   githubUrl: string;
   createdAt: string;
   githubUpdatedAt: string | null;
+  lastSyncedAt: string | null;
+  lastSyncStatus: string | null;
   submittedBy: {
     id: string;
     name: string | null;

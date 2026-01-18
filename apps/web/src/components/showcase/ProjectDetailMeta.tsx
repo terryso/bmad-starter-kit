@@ -1,6 +1,7 @@
-import { Calendar, User, CheckCircle, Code } from 'lucide-react';
+import { Calendar, User, CheckCircle, Code, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { formatRelativeTime } from '@/lib/utils';
 import type { ProjectDetail } from '@bmad-starter-kit/shared';
 
 interface ProjectDetailMetaProps {
@@ -51,6 +52,15 @@ export function ProjectDetailMeta({ project }: ProjectDetailMetaProps) {
             <span className="text-sm">最后更新</span>
           </div>
           <span className="text-sm">{formatDate(project.githubUpdatedAt)}</span>
+        </div>
+
+        {/* 最后同步时间 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <RefreshCw className="w-4 h-4" />
+            <span className="text-sm">最后同步时间</span>
+          </div>
+          <span className="text-sm">{formatRelativeTime(project.lastSyncedAt)}</span>
         </div>
 
         {/* 提交时间 */}

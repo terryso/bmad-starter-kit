@@ -367,4 +367,38 @@ export const showcaseApi = {
     }>('/api/v1/showcase/submit', { githubUrl });
     return response.data.data;
   },
+
+  /**
+   * 同步项目的最新 GitHub 信息（需要认证）
+   * 5 分钟内只能同步一次
+   * @param projectId 项目 ID
+   */
+  syncProject: async (projectId: string): Promise<{
+    id: string;
+    stars: number;
+    forks: number;
+    openIssues: number;
+    description: string;
+    topics: string[];
+    lastSyncedAt: string;
+    githubUpdatedAt: string;
+    lastSyncStatus: string;
+  }> => {
+    const response = await api.post<{
+      data: {
+        id: string;
+        stars: number;
+        forks: number;
+        openIssues: number;
+        description: string;
+        topics: string[];
+        lastSyncedAt: string;
+        githubUpdatedAt: string;
+        lastSyncStatus: string;
+      };
+      statusCode: number;
+      message: string;
+    }>(`/api/v1/showcase/projects/${projectId}/sync`);
+    return response.data.data;
+  },
 };

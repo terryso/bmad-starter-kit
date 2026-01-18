@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { showcaseApi } from '@/lib/api';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,18 +13,26 @@ import { RelatedProjects } from '@/components/showcase/RelatedProjects';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
 
   // 获取项目详情
   const {
     data: project,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ['project-detail', id],
     queryFn: () => (id ? showcaseApi.getProjectById(id) : Promise.reject('No ID')),
     enabled: !!id,
     retry: false,
   });
+
+  // 同步成功后刷新项目数据
+  const handleSyncSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['project-detail', id] });
+    queryClient.invalidateQueries({ queryKey: ['related-projects', id] });
+  };
 
   // 错误处理
   if (error) {
@@ -83,7 +91,10 @@ export default function ProjectDetailPage() {
         </Button>
 
         {/* 项目头部 */}
-        <ProjectDetailHeader project={project} />
+        <ProjectDetailHeader
+          project={project}
+          onSyncSuccess={handleSyncSuccess}
+        />
 
         {/* 统计数据 */}
         <div className="mt-6">

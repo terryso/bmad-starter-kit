@@ -3,6 +3,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ShowcaseService, ProjectCategory } from './showcase.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GithubFetcherService } from './github-fetcher.service';
+import { SyncCacheService } from './services/sync-cache.service';
 
 // Using string literal for ProjectStatus to avoid Prisma client import issues
 type ProjectStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -76,6 +77,14 @@ describe('ShowcaseService', () => {
         {
           provide: GithubFetcherService,
           useValue: mockGithubFetcher,
+        },
+        {
+          provide: SyncCacheService,
+          useValue: {
+            canSync: jest.fn().mockReturnValue(true),
+            setSyncAttempt: jest.fn(),
+            getRemainingCooldown: jest.fn().mockReturnValue(0),
+          },
         },
       ],
     }).compile();

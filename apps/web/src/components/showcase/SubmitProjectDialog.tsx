@@ -23,7 +23,7 @@ interface SubmitProjectDialogProps {
 }
 
 // GitHub URL 验证正则表达式
-const GITHUB_URL_REGEX = /^https?:\/\/(?:www\.)?github\.com\/[^\/]+\/[^\/]+\/?$/;
+const GITHUB_URL_REGEX = /^https?:\/\/(?:www\.)?github\.com\/[^/]+\/[^/]+\/?$/;
 
 export function SubmitProjectDialog({ trigger, open, onOpenChange }: SubmitProjectDialogProps) {
   const [githubUrl, setGithubUrl] = useState('');

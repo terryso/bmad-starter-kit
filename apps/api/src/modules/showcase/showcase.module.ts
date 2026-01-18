@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { GithubFetcherService } from './github-fetcher.service';
+import { SyncCacheService } from './services/sync-cache.service';
 import { ShowcaseService } from './showcase.service';
 import { ShowcaseController } from './showcase.controller';
 
@@ -15,8 +16,9 @@ import { ShowcaseController } from './showcase.controller';
   controllers: [ShowcaseController],
   providers: [
     GithubFetcherService,
+    SyncCacheService,
     ShowcaseService,
   ],
-  exports: [GithubFetcherService, ShowcaseService],
+  exports: [GithubFetcherService, SyncCacheService, ShowcaseService],
 })
 export class ShowcaseModule {}

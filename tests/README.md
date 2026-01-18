@@ -19,6 +19,9 @@ tests/
 │   ├── admin.spec.ts       # 管理员 API 测试
 │   ├── user-profile.spec.ts # 用户资料 API 测试
 │   ├── showcase.spec.ts    # 项目展示 API 测试
+│   ├── showcase-related.spec.ts # 相关项目 API 测试 (新增)
+│   ├── showcase-delete.spec.ts # 删除项目 API 测试 (新增)
+│   ├── showcase-sync.spec.ts # 同步项目 API 测试 (新增)
 │   ├── admin-showcase.spec.ts # 管理员审核 API 测试
 │   ├── project-detail.spec.ts # 项目详情 API 测试
 │   ├── my-projects.spec.ts # 我的项目 API 测试
@@ -26,12 +29,18 @@ tests/
 ├── e2e/                    # E2E 测试文件
 │   ├── project-submission.spec.ts # 项目提交 E2E 测试
 │   ├── my-projects.spec.ts # 我的项目管理 E2E 测试
+│   ├── my-projects-delete.spec.ts # 删除项目 E2E 测试 (新增)
+│   ├── project-sync.spec.ts # 同步项目 E2E 测试 (新增)
 │   ├── auth.spec.ts        # 认证流程测试
 │   ├── admin.spec.ts       # 管理员功能测试
 │   ├── profile.spec.ts     # 用户资料页面测试
 │   ├── showcase-browse.spec.ts # 项目展示浏览测试
+│   ├── showcase-navigation.spec.ts # 展示页导航测试
 │   ├── project-detail.spec.ts # 项目详情页面测试
-│   └── admin-showcase.spec.ts # 管理员审核界面测试
+│   ├── admin-showcase.spec.ts # 管理员审核界面测试
+│   ├── admin-enhanced.spec.ts # 增强管理功能测试
+│   ├── login-flow.spec.ts  # 登录流程测试
+│   └── setup-auth.spec.ts  # 认证设置测试
 ├── support/                # 测试基础设施
 │   ├── fixtures/           # 测试 Fixtures
 │   │   ├── index.ts        # Fixture 入口
@@ -40,9 +49,11 @@ tests/
 │   │       └── project.factory.ts # 项目数据工厂
 │   ├── helpers/            # 辅助函数
 │   │   ├── api.ts          # API 请求辅助
-│   │   └── selectors.ts    # 选择器定义
+│   │   └── selectors.ts    # 选择器定义 (已增强)
 │   └── tsconfig.json       # TypeScript 配置
-└── README.md               # 本文档
+├── global-setup.ts         # 全局测试设置
+├── README.md               # 本文档
+└── tsconfig.json           # 测试目录 TypeScript 配置
 ```
 
 ---

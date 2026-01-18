@@ -4,9 +4,12 @@ import {
   ForbiddenException,
   Logger,
   NotFoundException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GithubFetcherService } from './github-fetcher.service';
+import { SyncCacheService } from './services/sync-cache.service';
 
 // Define enum types locally to avoid Prisma import issues
 // These match the Prisma schema values
@@ -52,6 +55,8 @@ export interface Project {
   reviewedBy: string | null;
   reviewedAt: Date | null;
   rejectionReason: string | null;
+  lastSyncedAt: Date | null;
+  lastSyncStatus: string | null;
 }
 
 /**
@@ -173,6 +178,7 @@ export class ShowcaseService {
   constructor(
     private prisma: PrismaService,
     private githubFetcher: GithubFetcherService,
+    private syncCache: SyncCacheService,
   ) {
     this.prismaProject = (this.prisma as any).project;
   }
@@ -612,5 +618,128 @@ export class ShowcaseService {
     });
 
     this.logger.log(`Project ${projectId} deleted by user ${userId}`);
+  }
+
+  /**
+   * 同步项目的最新 GitHub 信息
+   * @param projectId 项目 ID
+   * @param userId 当前用户 ID
+   * @returns 更新后的项目信息
+   * @throws NotFoundException 如果项目不存在
+   * @throws HttpException 429 如果距离上次同步不足 5 分钟
+   */
+  async syncProject(
+    projectId: string,
+    userId: string,
+  ): Promise<{
+    id: string;
+    stars: number;
+    forks: number;
+    openIssues: number;
+    description: string;
+    topics: string[];
+    lastSyncedAt: string;
+    githubUpdatedAt: string;
+    lastSyncStatus: string;
+  }> {
+    this.logger.log(`User ${userId} syncing project ${projectId}`);
+
+    // 1. 检查项目是否存在
+    const project = await this.prismaProject.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      throw new NotFoundException('项目不存在');
+    }
+
+    // 2. 验证用户权限：只有项目提交者可以同步
+    if (project.submittedBy !== userId) {
+      throw new ForbiddenException('您没有权限同步此项目');
+    }
+
+    // 3. 检查速率限制（5分钟冷却）
+    if (!this.syncCache.canSync(userId, projectId)) {
+      const remainingSeconds = Math.ceil(
+        this.syncCache.getRemainingCooldown(userId, projectId) / 1000,
+      );
+      throw new HttpException(
+        `距离上次同步不到 5 分钟，请稍后再试（还需等待 ${remainingSeconds} 秒）`,
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    // 4. 调用 GitHub API 获取最新数据
+    try {
+      // 使用现有的 GithubFetcherService 获取项目信息
+      const projectInfo = await this.githubFetcher.fetchProjectInfo(
+        project.githubUrl,
+      );
+
+      // 5. 更新数据库
+      const now = new Date();
+      const updatedProject = await this.prismaProject.update({
+        where: { id: projectId },
+        data: {
+          stars: projectInfo.stars,
+          forks: projectInfo.forks,
+          openIssues: projectInfo.openIssues,
+          description: projectInfo.description,
+          topics: projectInfo.topics,
+          githubUpdatedAt: projectInfo.updatedAt
+            ? new Date(projectInfo.updatedAt)
+            : null,
+          lastSyncedAt: now,
+          lastSyncStatus: 'SUCCESS',
+        },
+        select: {
+          id: true,
+          stars: true,
+          forks: true,
+          openIssues: true,
+          description: true,
+          topics: true,
+          lastSyncedAt: true,
+          githubUpdatedAt: true,
+          lastSyncStatus: true,
+        },
+      });
+
+      // 6. 记录同步尝试（成功后才记录）
+      this.syncCache.setSyncAttempt(userId, projectId);
+
+      this.logger.log(`Project ${projectId} synced successfully`);
+
+      return {
+        id: updatedProject.id,
+        stars: updatedProject.stars,
+        forks: updatedProject.forks,
+        openIssues: updatedProject.openIssues,
+        description: updatedProject.description,
+        topics: updatedProject.topics,
+        lastSyncedAt: updatedProject.lastSyncedAt!.toISOString(),
+        githubUpdatedAt:
+          updatedProject.githubUpdatedAt?.toISOString() || now.toISOString(),
+        lastSyncStatus: updatedProject.lastSyncStatus!,
+      };
+    } catch (error) {
+      // 同步失败，不计入速率限制
+      this.logger.error(`Failed to sync project ${projectId}:`, error);
+
+      // 更新数据库记录失败状态
+      try {
+        await this.prismaProject.update({
+          where: { id: projectId },
+          data: {
+            lastSyncStatus: 'FAILED',
+          },
+        });
+      } catch (updateError) {
+        this.logger.error('Failed to update sync status:', updateError);
+      }
+
+      // 重新抛出错误，让 controller 处理
+      throw error;
+    }
   }
 }

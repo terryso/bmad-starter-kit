@@ -195,4 +195,52 @@ export class ShowcaseController {
   ): Promise<void> {
     await this.showcaseService.deleteMyProject(id, user.userId);
   }
+
+  /**
+   * 同步项目的最新 GitHub 信息
+   * POST /api/v1/showcase/projects/:id/sync
+   *
+   * 需要认证
+   * 速率限制：5 分钟内只能同步一次
+   * API 速率限制：10 次/分钟
+   *
+   * @param id 项目 ID
+   * @param user 当前认证用户
+   * @returns 更新后的项目信息
+   * @throws 401 如果未认证
+   * @throws 404 如果项目不存在
+   * @throws 429 如果距离上次同步不足 5 分钟
+   * @throws 500 如果 GitHub API 调用失败
+   */
+  @Post('projects/:id/sync')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Throttle({
+    default: {
+      limit: 10,       // 10 次同步
+      ttl: 60000,      // 每 60 秒（1 分钟）
+    },
+  })
+  async syncProject(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserData,
+  ): Promise<ApiResponse<{
+    id: string;
+    stars: number;
+    forks: number;
+    openIssues: number;
+    description: string;
+    topics: string[];
+    lastSyncedAt: string;
+    githubUpdatedAt: string;
+    lastSyncStatus: string;
+  }>> {
+    const result = await this.showcaseService.syncProject(id, user.userId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '项目信息同步成功',
+      data: result,
+    };
+  }
 }
