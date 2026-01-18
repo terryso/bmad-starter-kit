@@ -2,7 +2,6 @@ import {
   Injectable,
   Logger,
   InternalServerErrorException,
-  OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -14,26 +13,6 @@ import {
   AgentTimeoutException,
   InvalidResponseException,
 } from './exceptions';
-
-/**
- * Type for the dynamically imported Agent SDK query function
- */
-type AgentQueryFunction = (
-  params: {
-    prompt: string;
-    options: {
-      maxTurns: number;
-      tools: any[];
-      persistSession: boolean;
-      env: Record<string, string | undefined>;
-    };
-  }
-) => AsyncGenerator<{
-  type: string;
-  subtype?: string;
-  result?: string;
-  errors?: string[];
-}>;
 
 /**
  * Regular expression to parse GitHub URLs
@@ -63,6 +42,21 @@ interface GitHubAPIRepoData {
 }
 
 /**
+ * Anthropic API response shape
+ */
+interface AnthropicMessageResponse {
+  id: string;
+  type: string;
+  role: string;
+  content: Array<{
+    type: string;
+    text: string;
+  }>;
+  stop_reason: string;
+  model: string;
+}
+
+/**
  * System prompt for GitHub project analysis
  */
 const SYSTEM_PROMPT = `你是 GitHub 项目分析专家。你的任务是分析用户提供的 GitHub 仓库链接，提取项目信息并以 JSON 格式返回。
@@ -87,7 +81,7 @@ const SYSTEM_PROMPT = `你是 GitHub 项目分析专家。你的任务是分析�
    - "API": API 服务
    - "MOBILE": 移动应用
    - "OTHER": 其他
-11. **suggestedTags**: 建议的展示标签数组
+13. **suggestedTags**: 建议的展示标签数组
 
 ## 分类判断规则
 
@@ -121,8 +115,7 @@ JSON 示例：
 }
 \`\`\`
 
-如果某字段无法获取，使用 null 或空数组。
-`;
+如果某字段无法获取，使用 null 或空数组。`;
 
 /**
  * Error thrown when ANTHROPIC_AUTH_TOKEN is not configured
@@ -136,38 +129,15 @@ class MissingAuthTokenException extends InternalServerErrorException {
 }
 
 /**
- * Service for fetching GitHub project information using Claude Agent SDK
+ * Service for fetching GitHub project information using Anthropic Claude API
+ * Direct API calls instead of Agent SDK to avoid ESM/CommonJS compatibility issues
  */
 @Injectable()
-export class GithubFetcherService implements OnModuleInit {
+export class GithubFetcherService {
   private readonly logger = new Logger(GithubFetcherService.name);
   private readonly TIMEOUT = 30000; // 30 seconds
-  private agentQuery: AgentQueryFunction | null = null;
-  private sdkLoadError: Error | null = null;
 
   constructor(private configService: ConfigService) {}
-
-  /**
-   * Initialize service - pre-load Agent SDK to catch errors early
-   */
-  async onModuleInit(): Promise<void> {
-    const authToken = this.configService.get<string>('ANTHROPIC_AUTH_TOKEN');
-    if (!authToken) {
-      this.logger.warn('ANTHROPIC_AUTH_TOKEN not configured, Agent SDK will not be available');
-      return;
-    }
-
-    try {
-      this.logger.log('Pre-loading Agent SDK...');
-      const sdk = await import('@anthropic-ai/claude-agent-sdk');
-      this.agentQuery = sdk.query;
-      this.logger.log('Agent SDK loaded successfully');
-    } catch (error) {
-      this.sdkLoadError = error as Error;
-      this.logger.error('Failed to load Agent SDK', error);
-      // Don't throw here - allow service to start, but fail gracefully when used
-    }
-  }
 
   /**
    * Validate that auth token is configured before making requests
@@ -191,78 +161,117 @@ export class GithubFetcherService implements OnModuleInit {
     // 0. Validate auth token is configured
     this.validateAuthToken();
 
-    // 1. Check if SDK was loaded successfully
-    if (this.sdkLoadError) {
-      throw new InternalServerErrorException(
-        `Agent SDK failed to load during initialization: ${this.sdkLoadError.message}`
-      );
-    }
-
-    // 2. Parse URL
+    // 1. Parse URL
     const { owner, repo } = this.parseGitHubUrl(githubUrl);
 
     this.logger.log(`Fetching info for ${owner}/${repo}`);
 
-    // 3. First, try to fetch structured data from GitHub API (more reliable)
+    // 2. First, try to fetch structured data from GitHub API (more reliable)
     const githubApiData = await this.fetchFromGitHubAPI(owner, repo);
 
-    // 4. Build prompt
+    // 3. Build prompt
     const prompt = this.buildPrompt(githubUrl, githubApiData);
 
-    // 5. Get auth token and optional custom base URL
+    // 4. Get auth token and optional custom base URL
     const authToken = this.configService.get<string>('ANTHROPIC_AUTH_TOKEN')!;
     const baseUrl = this.configService.get<string>('ANTHROPIC_BASE_URL');
 
     try {
-      // 6. Use pre-loaded Agent SDK query function, or fall back to dynamic import
-      const query = this.agentQuery || (await import('@anthropic-ai/claude-agent-sdk')).query;
+      // 5. Call Anthropic Messages API directly
+      const resultText = await this.callAnthropicAPI(prompt, authToken, baseUrl);
 
-      const response = query({
-        prompt,
-        options: {
-          maxTurns: 1, // Only need one response
-          tools: [], // Disable all built-in tools, we only need text analysis
-          persistSession: false, // Don't persist session
-          env: {
-            ...process.env,
-            ...(baseUrl && { ANTHROPIC_BASE_URL: baseUrl }),
-            ANTHROPIC_API_KEY: authToken,
-          },
-        },
-      });
+      this.logger.debug(`Anthropic API response: ${resultText.substring(0, 200)}...`);
 
-      // 7. Collect result from async generator
-      let resultText: string | null = null;
-
-      for await (const message of response) {
-        if (message.type === 'result' && message.subtype === 'success') {
-          resultText = (message as any).result as string;
-          break;
-        }
-        if (message.type === 'result' && message.subtype?.startsWith('error_')) {
-          const errors = (message as any).errors as string[];
-          throw new Error(`Agent SDK query failed: ${errors.join(', ')}`);
-        }
-      }
-
-      if (!resultText) {
-        throw new Error('Agent SDK did not return a result');
-      }
-
-      this.logger.debug(`Agent SDK response: ${resultText.substring(0, 200)}...`);
-
-      // 8. Parse JSON response
+      // 6. Parse JSON response
       const jsonData = this.parseJsonResponse(resultText);
 
-      // 9. Normalize empty strings to null for optional fields
+      // 7. Normalize empty strings to null for optional fields
       const normalizedData = this.normalizeOptionalFields(jsonData);
 
-      // 10. Zod validation
+      // 8. Zod validation
       const validatedData = GitHubProjectResponseSchema.parse(normalizedData);
 
       return validatedData;
     } catch (error) {
       this.handleFetchError(error, owner, repo);
+    }
+  }
+
+  /**
+   * Call Anthropic Claude Messages API directly
+   * @param prompt - The prompt to send
+   * @param authToken - Anthropic API key
+   * @param baseUrl - Optional custom base URL
+   * @returns The text response from Claude
+   */
+  private async callAnthropicAPI(
+    prompt: string,
+    authToken: string,
+    baseUrl?: string
+  ): Promise<string> {
+    const apiUrl = baseUrl
+      ? `${baseUrl}/v1/messages`
+      : 'https://api.anthropic.com/v1/messages';
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT);
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': authToken,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4096,
+          system: SYSTEM_PROMPT,
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error');
+        this.logger.error(`Anthropic API error: ${response.status} - ${errorText}`);
+
+        if (response.status === 401 || response.status === 403) {
+          throw new InvalidResponseException(
+            'API authentication failed: Please check ANTHROPIC_AUTH_TOKEN configuration'
+          );
+        }
+        if (response.status === 429) {
+          throw new Error('API rate limit exceeded. Please try again later.');
+        }
+        throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = (await response.json()) as AnthropicMessageResponse;
+
+      // Extract text from response
+      const content = data.content?.[0]?.text;
+      if (!content) {
+        throw new Error('Empty response from Anthropic API');
+      }
+
+      return content;
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timeout');
+      }
+
+      throw error;
     }
   }
 
@@ -293,12 +302,10 @@ export class GithubFetcherService implements OnModuleInit {
   }
 
   /**
-   * Build prompt for Agent SDK
+   * Build prompt for Claude API
    */
   private buildPrompt(githubUrl: string, githubApiData?: GitHubAPIRepoData): string {
-    let prompt = `${SYSTEM_PROMPT}
-
-请分析以下 GitHub 仓库：${githubUrl}`;
+    let prompt = `请分析以下 GitHub 仓库：${githubUrl}`;
 
     // If we have GitHub API data, include it for reference
     if (githubApiData) {
@@ -358,12 +365,12 @@ export class GithubFetcherService implements OnModuleInit {
   }
 
   /**
-   * Parse JSON response from Agent SDK
+   * Parse JSON response from Claude API
    * Handles both plain JSON and JSON wrapped in markdown code blocks
    * @throws InvalidResponseException if parsing fails
    */
   private parseJsonResponse(response: string): unknown {
-    // Check for API authentication errors first
+    // Check for API authentication errors first (before JSON parsing)
     const apiErrorPatterns = [
       /Invalid API key/i,
       /authentication/i,
@@ -396,7 +403,7 @@ export class GithubFetcherService implements OnModuleInit {
             response: response.substring(0, 500),
           });
           throw new InvalidResponseException(
-            'Failed to parse JSON response from Agent SDK'
+            'Failed to parse JSON response from Claude API'
           );
         }
       }
@@ -404,7 +411,7 @@ export class GithubFetcherService implements OnModuleInit {
         response: response.substring(0, 500),
       });
       throw new InvalidResponseException(
-        'Agent SDK response did not contain valid JSON'
+        'Claude API response did not contain valid JSON'
       );
     }
   }
@@ -500,7 +507,7 @@ export class GithubFetcherService implements OnModuleInit {
   }
 
   /**
-   * Check if Agent SDK is available
+   * Check if service is available
    */
   isAvailable(): boolean {
     return !!this.configService.get<string>('ANTHROPIC_AUTH_TOKEN');

@@ -1,16 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { InternalServerErrorException } from '@nestjs/common';
-import { query } from '@anthropic-ai/claude-agent-sdk';
 import { GithubFetcherService } from './github-fetcher.service';
 import {
   InvalidGitHubUrlException,
   AgentTimeoutException,
   InvalidResponseException,
 } from './exceptions';
-
-// Mock Agent SDK
-jest.mock('@anthropic-ai/claude-agent-sdk');
 
 describe('GithubFetcherService', () => {
   let service: GithubFetcherService;
@@ -102,29 +98,56 @@ describe('GithubFetcherService', () => {
     });
 
     it('should fetch and parse project info successfully', async () => {
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield {
-          type: 'result',
-          subtype: 'success',
-          result: JSON.stringify(mockAgentResponse),
-        };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+      // Mock GitHub API
+      global.fetch = jest.fn().mockImplementation((url: string) => {
+        if (url.includes('api.github.com')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              name: 'claude-agent-sdk',
+              description: 'Agent SDK for Claude',
+              stargazers_count: 1000,
+              forks_count: 150,
+              open_issues_count: 10,
+              language: 'TypeScript',
+              topics: ['ai', 'sdk'],
+              license: { name: 'MIT' },
+              homepage: 'https://example.com',
+              updated_at: '2025-01-17T00:00:00Z',
+            }),
+          });
+        }
+        // Mock Anthropic API
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: 'msg-123',
+            type: 'message',
+            role: 'assistant',
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(mockAgentResponse),
+              },
+            ],
+            stop_reason: 'end_turn',
+            model: 'claude-sonnet-4-20250514',
+          }),
+        });
+      }) as jest.Mock;
 
       const result = await service.fetchProjectInfo(validUrl);
 
       expect(result).toEqual(mockAgentResponse);
-      expect(query).toHaveBeenCalledWith({
-        prompt: expect.stringContaining(validUrl),
-        options: expect.objectContaining({
-          maxTurns: 1,
-          tools: [],
-          persistSession: false,
-          env: expect.objectContaining({
-            ANTHROPIC_API_KEY: mockAuthToken,
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('api.anthropic.com/v1/messages'),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'x-api-key': mockAuthToken,
           }),
-        }),
-      });
+        })
+      );
     });
 
     it('should handle response with null optional fields', async () => {
@@ -144,14 +167,27 @@ describe('GithubFetcherService', () => {
         suggestedTags: [],
       };
 
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield {
-          type: 'result',
-          subtype: 'success',
-          result: JSON.stringify(responseWithNulls),
-        };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+      global.fetch = jest.fn().mockImplementation((url: string) => {
+        if (url.includes('api.github.com')) {
+          return Promise.resolve({ ok: false, status: 404 });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: 'msg-123',
+            type: 'message',
+            role: 'assistant',
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(responseWithNulls),
+              },
+            ],
+            stop_reason: 'end_turn',
+            model: 'claude-sonnet-4-20250514',
+          }),
+        });
+      }) as jest.Mock;
 
       const result = await service.fetchProjectInfo(validUrl);
 
@@ -167,14 +203,22 @@ describe('GithubFetcherService', () => {
     });
 
     it('should handle malformed JSON response', async () => {
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield {
-          type: 'result',
-          subtype: 'success',
-          result: 'This is not valid JSON',
-        };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: 'msg-123',
+          type: 'message',
+          role: 'assistant',
+          content: [
+            {
+              type: 'text',
+              text: 'This is not valid JSON',
+            },
+          ],
+          stop_reason: 'end_turn',
+          model: 'claude-sonnet-4-20250514',
+        }),
+      }) as jest.Mock;
 
       await expect(service.fetchProjectInfo(validUrl)).rejects.toThrow(
         InvalidResponseException
@@ -182,10 +226,12 @@ describe('GithubFetcherService', () => {
     });
 
     it('should handle API timeout error', async () => {
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        throw new Error('Request timeout');
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+      global.fetch = jest.fn().mockImplementation(() => {
+        // Create an AbortError
+        const error = new Error('Request timeout');
+        error.name = 'AbortError';
+        return Promise.reject(error);
+      }) as jest.Mock;
 
       await expect(service.fetchProjectInfo(validUrl)).rejects.toThrow(
         AgentTimeoutException
@@ -193,14 +239,22 @@ describe('GithubFetcherService', () => {
     });
 
     it('should handle API authentication error response', async () => {
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield {
-          type: 'result',
-          subtype: 'success',
-          result: 'Invalid API key: authentication failed',
-        };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: 'msg-123',
+          type: 'message',
+          role: 'assistant',
+          content: [
+            {
+              type: 'text',
+              text: 'Invalid API key: authentication failed',
+            },
+          ],
+          stop_reason: 'end_turn',
+          model: 'claude-sonnet-4-20250514',
+        }),
+      }) as jest.Mock;
 
       await expect(service.fetchProjectInfo(validUrl)).rejects.toThrow(
         InvalidResponseException
@@ -211,10 +265,22 @@ describe('GithubFetcherService', () => {
     });
 
     it('should handle 401 authentication error', async () => {
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield { type: 'result', subtype: 'success', result: '401 Unauthorized' };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: 'msg-123',
+          type: 'message',
+          role: 'assistant',
+          content: [
+            {
+              type: 'text',
+              text: '401 Unauthorized',
+            },
+          ],
+          stop_reason: 'end_turn',
+          model: 'claude-sonnet-4-20250514',
+        }),
+      }) as jest.Mock;
 
       await expect(service.fetchProjectInfo(validUrl)).rejects.toThrow(
         InvalidResponseException
@@ -230,43 +296,63 @@ ${JSON.stringify(mockAgentResponse)}
 
 That's it!`;
 
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield {
-          type: 'result',
-          subtype: 'success',
-          result: wrappedJsonResponse,
-        };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: 'msg-123',
+          type: 'message',
+          role: 'assistant',
+          content: [
+            {
+              type: 'text',
+              text: wrappedJsonResponse,
+            },
+          ],
+          stop_reason: 'end_turn',
+          model: 'claude-sonnet-4-20250514',
+        }),
+      }) as jest.Mock;
 
       const result = await service.fetchProjectInfo(validUrl);
 
       expect(result.repositoryName).toBe('claude-agent-sdk');
     });
 
-    it('should throw error when query returns error subtype', async () => {
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield {
-          type: 'result',
-          subtype: 'error_rate_limit',
-          errors: ['Rate limit exceeded'],
-        };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+    it('should handle 403 Forbidden error from Anthropic API', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        text: async () => JSON.stringify({
+          error: {
+            type: 'forbidden',
+            message: 'Request not allowed',
+          },
+        }),
+      }) as jest.Mock;
 
       await expect(service.fetchProjectInfo(validUrl)).rejects.toThrow(
-        'Agent SDK query failed'
+        InvalidResponseException
+      );
+      await expect(service.fetchProjectInfo(validUrl)).rejects.toThrow(
+        'API authentication failed'
       );
     });
 
-    it('should throw error when no result returned', async () => {
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield { type: 'info', message: 'Processing' };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+    it('should handle empty content response', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: 'msg-123',
+          type: 'message',
+          role: 'assistant',
+          content: [],
+          stop_reason: 'end_turn',
+          model: 'claude-sonnet-4-20250514',
+        }),
+      }) as jest.Mock;
 
       await expect(service.fetchProjectInfo(validUrl)).rejects.toThrow(
-        'Agent SDK did not return a result'
+        'Failed to fetch repository information'
       );
     });
 
@@ -277,25 +363,34 @@ That's it!`;
         return undefined;
       });
 
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield {
-          type: 'result',
-          subtype: 'success',
-          result: JSON.stringify(mockAgentResponse),
-        };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: 'msg-123',
+          type: 'message',
+          role: 'assistant',
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(mockAgentResponse),
+            },
+          ],
+          stop_reason: 'end_turn',
+          model: 'claude-sonnet-4-20250514',
+        }),
+      }) as jest.Mock;
 
       await service.fetchProjectInfo(validUrl);
 
-      expect(query).toHaveBeenCalledWith({
-        prompt: expect.any(String),
-        options: expect.objectContaining({
-          env: expect.objectContaining({
-            ANTHROPIC_BASE_URL: 'https://custom.api.com',
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://custom.api.com/v1/messages',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'x-api-key': mockAuthToken,
           }),
-        }),
-      });
+        })
+      );
     });
 
     it('should normalize empty strings to null for optional fields', async () => {
@@ -313,20 +408,41 @@ That's it!`;
         suggestedTags: [],
       };
 
-      const mockQuery = jest.fn().mockImplementation(async function* () {
-        yield {
-          type: 'result',
-          subtype: 'success',
-          result: JSON.stringify(responseWithEmptyStrings),
-        };
-      });
-      (query as jest.Mock).mockImplementation(mockQuery);
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: 'msg-123',
+          type: 'message',
+          role: 'assistant',
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(responseWithEmptyStrings),
+            },
+          ],
+          stop_reason: 'end_turn',
+          model: 'claude-sonnet-4-20250514',
+        }),
+      }) as jest.Mock;
 
       const result = await service.fetchProjectInfo(validUrl);
 
       // Empty strings should be normalized to null
-      // Note: The Zod schema will further validate/transform these
+      expect(result.homepageUrl).toBeNull();
+      expect(result.license).toBeNull();
       expect(result.category).toBe('OTHER');
+    });
+
+    it('should handle 429 rate limit error', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        text: async () => 'Too many requests',
+      }) as jest.Mock;
+
+      await expect(service.fetchProjectInfo(validUrl)).rejects.toThrow(
+        'Failed to fetch repository information'
+      );
     });
   });
 
