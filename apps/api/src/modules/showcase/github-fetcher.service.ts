@@ -39,6 +39,7 @@ interface GitHubAPIRepoData {
   license: { name: string } | null;
   homepage: string | null;
   updated_at: string;
+  readmeContent?: string;
 }
 
 /**
@@ -355,9 +356,21 @@ export class GithubFetcherService {
 - 主题标签: ${githubApiData.topics?.join(', ') || '无'}
 - 开源协议: ${githubApiData.license?.name || '无'}
 - 主页: ${githubApiData.homepage || '无'}
-- 更新时间: ${githubApiData.updated_at}
+- 更新时间: ${githubApiData.updated_at}`;
 
-请根据这些参考信息返回 JSON，但请根据你浏览仓库时的实际观察来修正语言和分类（API 的语言信息可能不够准确）。`;
+      // Include README content if available
+      if (githubApiData.readmeContent) {
+        prompt += `
+
+**README 内容：**
+${githubApiData.readmeContent}
+
+请仔细阅读上面的 README 内容，**务必根据 README 中的实际描述来填写 description 字段**，不要仅凭仓库名称猜测。`;
+      } else {
+        prompt += `
+
+请根据这些参考信息返回 JSON。`;
+      }
     }
 
     return prompt;
@@ -385,15 +398,88 @@ export class GithubFetcherService {
       });
 
       if (!response.ok) {
-        this.logger.warn(`GitHub API request failed: ${response.status}`);
+        // Handle rate limiting specifically
+        if (response.status === 403) {
+          const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
+          const rateLimitReset = response.headers.get('X-RateLimit-Reset');
+          this.logger.warn(
+            `GitHub API rate limit hit. Remaining: ${rateLimitRemaining}, ` +
+            `Reset at: ${rateLimitReset ? new Date(parseInt(rateLimitReset) * 1000).toISOString() : 'unknown'}`
+          );
+          if (!this.configService.get<string>('GITHUB_TOKEN')) {
+            this.logger.warn('Consider adding GITHUB_TOKEN environment variable for higher rate limits (5000 req/hour vs 60 req/hour)');
+          }
+        } else {
+          this.logger.warn(`GitHub API request failed: ${response.status}`);
+        }
         return undefined;
       }
 
       const data = (await response.json()) as GitHubAPIRepoData;
       this.logger.debug(`GitHub API data fetched: stars=${data.stargazers_count}, language=${data.language}`);
+
+      // Fetch README content for better description accuracy
+      const readmeContent = await this.fetchReadmeContent(owner, repo);
+      if (readmeContent) {
+        data.readmeContent = readmeContent;
+        this.logger.debug(`README content fetched (${readmeContent.length} chars)`);
+      }
+
       return data;
     } catch (error) {
       this.logger.warn(`GitHub API fetch failed: ${this.getErrorMessage(error)}`);
+      return undefined;
+    }
+  }
+
+  /**
+   * Fetch README content from GitHub API
+   * Uses GitHub's default README endpoint which auto-detects the README file
+   */
+  private async fetchReadmeContent(
+    owner: string,
+    repo: string
+  ): Promise<string | undefined> {
+    try {
+      // Use GitHub's default README endpoint (auto-detects README file)
+      const url = `https://api.github.com/repos/${owner}/${repo}/readme`;
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/vnd.github.v3.raw', // Get raw content directly
+          ...(this.configService.get<string>('GITHUB_TOKEN')
+            ? { Authorization: `Bearer ${this.configService.get<string>('GITHUB_TOKEN')}` }
+            : {}),
+        },
+        signal: AbortSignal.timeout(5000), // 5 second timeout
+      });
+
+      if (response.ok) {
+        const content = await response.text();
+        // Limit README size to avoid token limit issues (max 10000 chars)
+        if (content.length > 10000) {
+          this.logger.debug(`README truncated from ${content.length} to 10000 chars`);
+          return content.substring(0, 10000) + '\n\n...(content truncated)';
+        }
+        return content;
+      }
+
+      // Handle rate limiting specifically
+      if (response.status === 403) {
+        const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
+        const rateLimitReset = response.headers.get('X-RateLimit-Reset');
+        this.logger.warn(
+          `GitHub API rate limit hit. Remaining: ${rateLimitRemaining}, ` +
+          `Reset at: ${rateLimitReset ? new Date(parseInt(rateLimitReset) * 1000).toISOString() : 'unknown'}`
+        );
+        if (!this.configService.get<string>('GITHUB_TOKEN')) {
+          this.logger.warn('Consider adding GITHUB_TOKEN environment variable for higher rate limits (5000 req/hour vs 60 req/hour)');
+        }
+      }
+
+      this.logger.debug(`README fetch failed: ${response.status}`);
+      return undefined;
+    } catch (error) {
+      this.logger.debug(`README fetch error: ${this.getErrorMessage(error)}`);
       return undefined;
     }
   }
