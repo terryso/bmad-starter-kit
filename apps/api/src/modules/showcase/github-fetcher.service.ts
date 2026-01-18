@@ -2,6 +2,7 @@ import {
   Injectable,
   Logger,
   InternalServerErrorException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -13,6 +14,26 @@ import {
   AgentTimeoutException,
   InvalidResponseException,
 } from './exceptions';
+
+/**
+ * Type for the dynamically imported Agent SDK query function
+ */
+type AgentQueryFunction = (
+  params: {
+    prompt: string;
+    options: {
+      maxTurns: number;
+      tools: any[];
+      persistSession: boolean;
+      env: Record<string, string | undefined>;
+    };
+  }
+) => AsyncGenerator<{
+  type: string;
+  subtype?: string;
+  result?: string;
+  errors?: string[];
+}>;
 
 /**
  * Regular expression to parse GitHub URLs
@@ -118,11 +139,35 @@ class MissingAuthTokenException extends InternalServerErrorException {
  * Service for fetching GitHub project information using Claude Agent SDK
  */
 @Injectable()
-export class GithubFetcherService {
+export class GithubFetcherService implements OnModuleInit {
   private readonly logger = new Logger(GithubFetcherService.name);
   private readonly TIMEOUT = 30000; // 30 seconds
+  private agentQuery: AgentQueryFunction | null = null;
+  private sdkLoadError: Error | null = null;
 
   constructor(private configService: ConfigService) {}
+
+  /**
+   * Initialize service - pre-load Agent SDK to catch errors early
+   */
+  async onModuleInit(): Promise<void> {
+    const authToken = this.configService.get<string>('ANTHROPIC_AUTH_TOKEN');
+    if (!authToken) {
+      this.logger.warn('ANTHROPIC_AUTH_TOKEN not configured, Agent SDK will not be available');
+      return;
+    }
+
+    try {
+      this.logger.log('Pre-loading Agent SDK...');
+      const sdk = await import('@anthropic-ai/claude-agent-sdk');
+      this.agentQuery = sdk.query;
+      this.logger.log('Agent SDK loaded successfully');
+    } catch (error) {
+      this.sdkLoadError = error as Error;
+      this.logger.error('Failed to load Agent SDK', error);
+      // Don't throw here - allow service to start, but fail gracefully when used
+    }
+  }
 
   /**
    * Validate that auth token is configured before making requests
@@ -146,24 +191,31 @@ export class GithubFetcherService {
     // 0. Validate auth token is configured
     this.validateAuthToken();
 
-    // 1. Parse URL
+    // 1. Check if SDK was loaded successfully
+    if (this.sdkLoadError) {
+      throw new InternalServerErrorException(
+        `Agent SDK failed to load during initialization: ${this.sdkLoadError.message}`
+      );
+    }
+
+    // 2. Parse URL
     const { owner, repo } = this.parseGitHubUrl(githubUrl);
 
     this.logger.log(`Fetching info for ${owner}/${repo}`);
 
-    // 2. First, try to fetch structured data from GitHub API (more reliable)
+    // 3. First, try to fetch structured data from GitHub API (more reliable)
     const githubApiData = await this.fetchFromGitHubAPI(owner, repo);
 
-    // 3. Build prompt
+    // 4. Build prompt
     const prompt = this.buildPrompt(githubUrl, githubApiData);
 
-    // 4. Get auth token and optional custom base URL
+    // 5. Get auth token and optional custom base URL
     const authToken = this.configService.get<string>('ANTHROPIC_AUTH_TOKEN')!;
     const baseUrl = this.configService.get<string>('ANTHROPIC_BASE_URL');
 
     try {
-      // 5. Dynamically import and call Agent SDK query (ESM-only package)
-      const { query } = await import('@anthropic-ai/claude-agent-sdk');
+      // 6. Use pre-loaded Agent SDK query function, or fall back to dynamic import
+      const query = this.agentQuery || (await import('@anthropic-ai/claude-agent-sdk')).query;
 
       const response = query({
         prompt,
@@ -179,7 +231,7 @@ export class GithubFetcherService {
         },
       });
 
-      // 5. Collect result from async generator
+      // 7. Collect result from async generator
       let resultText: string | null = null;
 
       for await (const message of response) {
@@ -199,13 +251,13 @@ export class GithubFetcherService {
 
       this.logger.debug(`Agent SDK response: ${resultText.substring(0, 200)}...`);
 
-      // 6. Parse JSON response
+      // 8. Parse JSON response
       const jsonData = this.parseJsonResponse(resultText);
 
-      // 7. Normalize empty strings to null for optional fields
+      // 9. Normalize empty strings to null for optional fields
       const normalizedData = this.normalizeOptionalFields(jsonData);
 
-      // 8. Zod validation
+      // 10. Zod validation
       const validatedData = GitHubProjectResponseSchema.parse(normalizedData);
 
       return validatedData;
