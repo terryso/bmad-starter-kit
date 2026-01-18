@@ -359,8 +359,15 @@ test.describe('管理员项目审核 API', () => {
 
       if (response.status() === 400) {
         const body = await response.json();
-        const errorText = body.message || body.error || JSON.stringify(body);
-        expect(errorText).toMatch(/5|字符|min length|required/i);
+        // 验证错误在 errors 数组中
+        if (body.errors && Array.isArray(body.errors)) {
+          const errorMessages = body.errors.map((e: any) => e.message || '').join(' ');
+          expect(errorMessages).toMatch(/5|字符|min length/i);
+        } else {
+          // 如果没有 errors 数组，检查 message
+          const errorText = body.message || body.error || JSON.stringify(body);
+          expect(errorText).toMatch(/5|字符|min length|required/i);
+        }
       }
     });
 
@@ -383,8 +390,15 @@ test.describe('管理员项目审核 API', () => {
 
       if (response.status() === 400) {
         const body = await response.json();
-        const errorText = body.message || body.error || JSON.stringify(body);
-        expect(errorText).toMatch(/不能为空|required|empty/i);
+        // 验证错误在 errors 数组中
+        if (body.errors && Array.isArray(body.errors)) {
+          const errorMessages = body.errors.map((e: any) => e.message || '').join(' ');
+          expect(errorMessages).toMatch(/不能为空|required|empty/i);
+        } else {
+          // 如果没有 errors 数组，检查 message
+          const errorText = body.message || body.error || JSON.stringify(body);
+          expect(errorText).toMatch(/不能为空|required|empty/i);
+        }
       }
     });
 
@@ -426,14 +440,25 @@ test.describe('管理员项目审核 API', () => {
 
     test('[P1] 拒绝已处理的项目的边界情况', async ({ api }) => {
       // GIVEN: 管理员已认证
-      // 如果有待审核项目 ID，使用它；否则跳过
-      if (!pendingProjectId) {
+      // 创建一个新的项目用于此测试
+      const project = await submitPendingProject(api, userToken, `https://github.com/test-boundary-${Date.now()}/repo`);
+      if (!project) {
         test.skip();
         return;
       }
 
+      // 首先拒绝该项目
+      await api.put(`${API_URL}/api/v1/admin/showcase/${project.id}/reject`, {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+        },
+        data: {
+          rejectionReason: '第一次拒绝',
+        },
+      });
+
       // WHEN: 尝试拒绝已被拒绝的项目
-      const response = await api.put(`${API_URL}/api/v1/admin/showcase/${pendingProjectId}/reject`, {
+      const response = await api.put(`${API_URL}/api/v1/admin/showcase/${project.id}/reject`, {
         headers: {
           Authorization: `Bearer ${adminToken}`,
         },
@@ -442,8 +467,8 @@ test.describe('管理员项目审核 API', () => {
         },
       });
 
-      // THEN: 可能返回 400（已处理）或 404
-      expect([400, 404]).toContain(response.status());
+      // THEN: 应返回 400（已处理）
+      expect(response.status()).toBe(400);
     });
   });
 

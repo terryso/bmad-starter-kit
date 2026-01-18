@@ -141,9 +141,10 @@ export class AdminService {
    * All counts are calculated in real-time on each request.
    */
   async getStats(): Promise<SystemStatsDto> {
-    // Get today's start (midnight) for "today" calculations
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    try {
+      // Get today's start (midnight) for "today" calculations
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
 
     // Get month start for "this month" calculations
     const monthStart = new Date();
@@ -187,23 +188,16 @@ export class AdminService {
       // Pending projects awaiting review
       this.prismaProject.count({
         where: {
-          status: 'PENDING',
+          status: ProjectStatus.PENDING,
         },
       }),
 
-      // Total stars across all projects (sum of stars, excluding null values)
+      // Total stars across all projects (sum of stars)
       this.prismaProject
-        .aggregate({
-          where: {
-            stars: {
-              not: null,
-            },
-          },
-          _sum: {
-            stars: true,
-          },
+        .findMany({
+          select: { stars: true },
         })
-        .then((result) => result._sum.stars || 0),
+        .then((projects) => projects.reduce((sum, p) => sum + (p.stars || 0), 0)),
 
       // New projects submitted today
       this.prismaProject.count({
@@ -224,6 +218,10 @@ export class AdminService {
       totalStars,
       newProjectsToday,
     };
+    } catch (error: unknown) {
+      console.error('Error in getStats:', error);
+      throw error;
+    }
   }
 
   /**
