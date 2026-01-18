@@ -149,6 +149,7 @@ Go back to Step 3 for the next story until all stories in the sprint are complet
 - Role-based access control (USER/ADMIN)
 - Admin dashboard with statistics
 - User management (list, search, filter)
+- **BMAD Showcase** - Submit and showcase your BMAD practice projects
 
 ### Project Structure
 

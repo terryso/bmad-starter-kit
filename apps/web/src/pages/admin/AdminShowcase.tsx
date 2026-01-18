@@ -124,13 +124,18 @@ function AdminShowcaseContent() {
     });
   };
 
-  // 加载状态 - 只在首次加载且无数据时显示骨架图
-  if (isInitialLoad && isLoading && !data) {
+  // 加载状态 - 首次加载或无数据时显示骨架图
+  if (isLoading || !data || (isFetching && isInitialLoad)) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-48" />
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Skeleton className="h-6 w-6" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -162,45 +167,32 @@ function AdminShowcaseContent() {
     );
   }
 
-  // 无待审核项目 - 只在非首次加载且有数据时显示
-  if (!isInitialLoad && data && data.items.length === 0 && !isFetching) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-4">
-          <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-        </div>
-        <h2 className="text-xl font-semibold mb-2">全部处理完成</h2>
-        <p className="text-muted-foreground text-center max-w-md">
-          暂无待审核项目，所有提交都已处理完毕
-        </p>
-      </div>
-    );
-  }
-
   // 等待数据加载时返回 null（保持旧数据可见）
   if (!data) {
     return null;
   }
 
-  return (
-    <div className="space-y-6">
-      {/* 页面头部 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Shield className="w-6 h-6 text-primary" />
+  // 根据数据状态渲染内容
+  const renderContent = () => {
+    // 无待审核项目
+    if (data.items.length === 0 && !isFetching) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-4">
+            <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">项目审核</h1>
-            <p className="text-sm text-muted-foreground">
-              共 {data.meta.total} 个待审核项目
-            </p>
-          </div>
+          <h2 className="text-xl font-semibold mb-2">全部处理完成</h2>
+          <p className="text-muted-foreground text-center max-w-md">
+            暂无待审核项目，所有提交都已处理完毕
+          </p>
         </div>
-      </div>
+      );
+    }
 
-      {/* 待审核项目列表 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    // 待审核项目列表
+    return (
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {data.items.map((project) => (
           <Card key={project.id} className="flex flex-col">
             <CardHeader className="pb-4">
@@ -330,12 +322,35 @@ function AdminShowcaseContent() {
               onClick={() => setPage(page + 1)}
               disabled={page === data.meta.totalPages}
             >
-              下一页
               <ChevronRight className="w-4 h-4 ml-1" />
+              下一页
             </Button>
           </div>
         </div>
       )}
+      </>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 页面头部 - 始终显示 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Shield className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">项目审核</h1>
+            <p className="text-sm text-muted-foreground">
+              {isLoading ? '加载中...' : `共 ${data.meta.total} 个待审核项目`}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 内容区域 */}
+      {renderContent()}
 
       {/* 批准确认对话框 */}
       <Dialog open={approveDialog.open} onOpenChange={(open) => setApproveDialog({ open, id: '' })}>

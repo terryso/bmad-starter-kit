@@ -36,6 +36,8 @@ export interface Project {
   description: string;
   owner: string;
   stars: number;
+  forks: number;
+  openIssues: number;
   language: string | null;
   topics: string[];
   githubUpdatedAt: Date | null;
@@ -83,6 +85,8 @@ export interface ProjectDetailResponse {
   description: string;
   owner: string;
   stars: number;
+  forks: number;
+  openIssues: number;
   language: string | null;
   topics: string[];
   category: ProjectCategory;
@@ -115,6 +119,8 @@ export interface RelatedProject {
   description: string;
   owner: string;
   stars: number;
+  forks: number;
+  openIssues: number;
   language: string | null;
   category: ProjectCategory;
   screenshotUrl: string | null;
@@ -133,6 +139,8 @@ export interface MyProject {
   description: string;
   owner: string;
   stars: number;
+  forks: number;
+  openIssues: number;
   language: string | null;
   topics: string[];
   category: ProjectCategory;
@@ -205,6 +213,8 @@ export class ShowcaseService {
         description: projectInfo.description,
         owner: projectInfo.owner,
         stars: projectInfo.stars,
+        forks: projectInfo.forks,
+        openIssues: projectInfo.openIssues,
         language: projectInfo.language,
         topics: projectInfo.topics,
         githubUpdatedAt: projectInfo.updatedAt
@@ -313,6 +323,8 @@ export class ShowcaseService {
           description: true,
           owner: true,
           stars: true,
+          forks: true,
+          openIssues: true,
           language: true,
           topics: true,
           category: true,
@@ -352,6 +364,8 @@ export class ShowcaseService {
         description: true,
         owner: true,
         stars: true,
+        forks: true,
+        openIssues: true,
         language: true,
         topics: true,
         category: true,
@@ -397,6 +411,8 @@ export class ShowcaseService {
       description: project.description,
       owner: project.owner,
       stars: project.stars,
+      forks: project.forks,
+      openIssues: project.openIssues,
       language: project.language,
       topics: project.topics,
       category: project.category,
@@ -445,6 +461,8 @@ export class ShowcaseService {
         description: true,
         owner: true,
         stars: true,
+        forks: true,
+        openIssues: true,
         language: true,
         category: true,
         screenshotUrl: true,
@@ -526,6 +544,8 @@ export class ShowcaseService {
           description: true,
           owner: true,
           stars: true,
+          forks: true,
+          openIssues: true,
           language: true,
           topics: true,
           category: true,

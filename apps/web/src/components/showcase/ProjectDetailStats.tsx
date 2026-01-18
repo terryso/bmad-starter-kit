@@ -17,13 +17,13 @@ export function ProjectDetailStats({ project }: ProjectDetailStatsProps) {
     {
       icon: GitFork,
       label: 'Forks',
-      value: project.forks?.toLocaleString() || 'N/A',
+      value: project.forks.toLocaleString(),
       className: 'text-blue-500',
     },
     {
       icon: AlertCircle,
       label: 'Issues',
-      value: project.issues?.toLocaleString() || 'N/A',
+      value: project.openIssues.toLocaleString(),
       className: 'text-purple-500',
     },
   ];

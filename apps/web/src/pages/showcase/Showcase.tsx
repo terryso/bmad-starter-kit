@@ -3,15 +3,19 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { showcaseApi } from '@/lib/api';
 import type { ProjectCategory } from '@bmad-starter-kit/shared';
-import { Package, Search } from 'lucide-react';
+import { Package, Search, Plus } from 'lucide-react';
 import { ShowcaseGrid } from '@/components/showcase/ShowcaseGrid';
 import { ShowcaseFilters } from '@/components/showcase/ShowcaseFilters';
+import { SubmitProjectDialog } from '@/components/showcase/SubmitProjectDialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useAuthStore } from '@/stores/auth.store';
 
 export default function ShowcasePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isAuthenticated } = useAuthStore();
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
 
   // 从 URL 获取查询参数
   const page = Number(searchParams.get('page')) || 1;
@@ -70,7 +74,7 @@ export default function ShowcasePage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* 页面头部 */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Package className="w-6 h-6 text-primary" />
@@ -83,19 +87,35 @@ export default function ShowcasePage() {
             </div>
           </div>
 
-          {/* 搜索框 */}
-          <div className="flex gap-2 max-w-md">
-            <Input
-              placeholder="搜索项目名称或描述..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex-1"
-            />
-            <Button onClick={handleSearch}>
-              <Search className="w-4 h-4 mr-2" />
-              搜索
-            </Button>
+          {/* 右侧操作区 */}
+          <div className="flex items-center gap-2">
+            {/* 提交项目按钮 - 仅登录用户可见 */}
+            {isAuthenticated && (
+              <SubmitProjectDialog
+                open={submitDialogOpen}
+                onOpenChange={setSubmitDialogOpen}
+                trigger={
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    提交项目
+                  </Button>
+                }
+              />
+            )}
+
+            {/* 搜索框 */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="搜索项目..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-48 sm:w-64"
+              />
+              <Button onClick={handleSearch} size="icon">
+                <Search className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
 

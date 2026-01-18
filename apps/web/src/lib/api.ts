@@ -353,4 +353,18 @@ export const showcaseApi = {
   deleteMyProject: async (id: string): Promise<void> => {
     await api.delete(`/api/v1/showcase/my-projects/${id}`);
   },
+
+  /**
+   * 提交 GitHub 项目链接（需要认证）
+   * 系统会自动抓取项目信息并提交审核
+   * @param githubUrl GitHub 仓库 URL
+   */
+  submitProject: async (githubUrl: string): Promise<{ message: string; projectId: string }> => {
+    const response = await api.post<{
+      data: { message: string; projectId: string };
+      statusCode: number;
+      message: string;
+    }>('/api/v1/showcase/submit', { githubUrl });
+    return response.data.data;
+  },
 };

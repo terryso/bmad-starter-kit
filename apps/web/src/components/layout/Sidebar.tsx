@@ -79,7 +79,9 @@ export function Sidebar() {
               const isActive = item.href === "/admin/showcase"
                 ? location.pathname.startsWith("/admin/showcase")
                 : location.pathname === item.href;
-              const showBadge = item.badge && pendingCount && pendingCount > 0;
+              // Only show badge when there are actual pending items (> 0)
+              // pendingCount is already the data value (number) from useQuery
+              const showBadge = item.badge && typeof pendingCount === 'number' && pendingCount > 0;
               return (
                 <NavLink
                   key={item.name}

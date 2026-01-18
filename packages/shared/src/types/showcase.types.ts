@@ -16,8 +16,8 @@ export interface Project {
   description: string;
   owner: string;
   stars: number;
-  forks: number | null;
-  issues: number | null;
+  forks: number;
+  openIssues: number;
   language: string | null;
   topics: string[];
   category: ProjectCategory;
@@ -56,8 +56,8 @@ export interface ProjectDetail {
   description: string;
   owner: string;
   stars: number;
-  forks: number | null;
-  issues: number | null;
+  forks: number;
+  openIssues: number;
   language: string | null;
   topics: string[];
   category: ProjectCategory;
@@ -90,6 +90,8 @@ export interface RelatedProject {
   description: string;
   owner: string;
   stars: number;
+  forks: number;
+  openIssues: number;
   language: string | null;
   category: ProjectCategory;
   screenshotUrl: string | null;
@@ -108,6 +110,8 @@ export interface PendingProject {
   description: string;
   owner: string;
   stars: number;
+  forks: number;
+  openIssues: number;
   language: string | null;
   category: ProjectCategory;
   topics: string[];
@@ -149,6 +153,8 @@ export interface MyProject {
   description: string;
   owner: string;
   stars: number;
+  forks: number;
+  openIssues: number;
   language: string | null;
   topics: string[];
   category: ProjectCategory;

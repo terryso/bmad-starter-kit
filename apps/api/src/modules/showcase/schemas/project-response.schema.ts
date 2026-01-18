@@ -8,7 +8,16 @@ export const GitHubProjectResponseSchema = z.object({
   repositoryName: z.string().min(1, 'Repository name is required'),
   description: z.string().nullable().transform(val => val || 'No description available'),
   owner: z.string().min(1, 'Owner is required'),
-  stars: z.number().int().min(0, 'Stars must be a non-negative integer'),
+  // Allow null/undefined for stars and default to 0
+  stars: z
+    .union([z.number().int().min(0), z.null(), z.undefined()])
+    .transform(val => (typeof val === 'number' ? val : 0)),
+  forks: z
+    .union([z.number().int().min(0), z.null(), z.undefined()])
+    .transform(val => (typeof val === 'number' ? val : 0)),
+  openIssues: z
+    .union([z.number().int().min(0), z.null(), z.undefined()])
+    .transform(val => (typeof val === 'number' ? val : 0)),
   language: z.string().nullable(),
   topics: z.array(z.string()).default([]),
   updatedAt: z.string().nullable().transform(val => val || new Date().toISOString()),

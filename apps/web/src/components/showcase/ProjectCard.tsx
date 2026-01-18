@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Star, Globe } from 'lucide-react';
+import { Star, GitFork, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import type { Project, RelatedProject } from '@bmad-starter-kit/shared';
@@ -46,15 +46,28 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </CardContent>
 
         <CardFooter className="pt-0 flex items-center justify-between text-sm text-muted-foreground">
-          {/* 星标数 */}
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span>{project.stars.toLocaleString()}</span>
+          <div className="flex items-center gap-3">
+            {/* 星标数 */}
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span>{project.stars.toLocaleString()}</span>
+            </div>
+
+            {/* Fork 数 */}
+            <div className="flex items-center gap-1">
+              <GitFork className="w-4 h-4" />
+              <span>{project.forks.toLocaleString()}</span>
+            </div>
+
+            {/* Issues 数 */}
+            <div className="flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              <span>{project.openIssues.toLocaleString()}</span>
+            </div>
           </div>
 
           {/* 所有者 */}
-          <div className="flex items-center gap-1">
-            <Globe className="w-4 h-4" />
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <span>{project.owner}</span>
           </div>
         </CardFooter>

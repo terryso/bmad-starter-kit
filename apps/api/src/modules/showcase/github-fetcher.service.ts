@@ -26,6 +26,22 @@ const GITHUB_URL_REGEX =
   /(?:https?:\/\/)?(?:www\.)?github\.com\/([^\/]+)\/([^\/\.]+)(?:\.git)?/;
 
 /**
+ * GitHub API repository data shape
+ */
+interface GitHubAPIRepoData {
+  name: string;
+  description: string | null;
+  stargazers_count: number;
+  forks_count: number;
+  open_issues_count: number;
+  language: string | null;
+  topics: string[];
+  license: { name: string } | null;
+  homepage: string | null;
+  updated_at: string;
+}
+
+/**
  * System prompt for GitHub project analysis
  */
 const SYSTEM_PROMPT = `你是 GitHub 项目分析专家。你的任务是分析用户提供的 GitHub 仓库链接，提取项目信息并以 JSON 格式返回。
@@ -36,12 +52,14 @@ const SYSTEM_PROMPT = `你是 GitHub 项目分析专家。你的任务是分析�
 2. **description**: 项目描述（从 README 提取，1-2 句话）
 3. **owner**: 仓库所有者用户名
 4. **stars**: 星标数量
-5. **language**: 主要编程语言
-6. **topics**: GitHub 主题标签数组
-7. **updatedAt**: 最后更新时间 (ISO 8601 格式)
-8. **homepageUrl**: 官网 URL（如果没有则用 null）
-9. **license**: 开源协议（如果没有则用 null）
-10. **category**: 建议分类，必须是以下枚举值之一:
+5. **forks**: Fork 数量
+6. **openIssues**: Open Issues 数量
+7. **language**: 主要编程语言（重要：请仔细检查代码仓库的实际文件，特别是查看项目根目录的配置文件如 package.json, tsconfig.json, pyproject.toml, go.mod, pom.xml 等，以及 src/ 目录下的源代码文件扩展名。不要仅凭项目名称或用途推断语言）
+8. **topics**: GitHub 主题标签数组
+9. **updatedAt**: 最后更新时间 (ISO 8601 格式)
+10. **homepageUrl**: 官网 URL（如果没有则用 null）
+11. **license**: 开源协议（如果没有则用 null）
+12. **category**: 建议分类，必须是以下枚举值之一:
    - "WEB_APP": Web 应用
    - "CLI": 命令行工具
    - "LIBRARY": 代码库/SDK
@@ -70,6 +88,8 @@ JSON 示例：
   "description": "A JavaScript library for building user interfaces",
   "owner": "facebook",
   "stars": 200000,
+  "forks": 45000,
+  "openIssues": 1200,
   "language": "JavaScript",
   "topics": ["react", "javascript", "library"],
   "updatedAt": "2024-01-15T10:30:00Z",
@@ -131,15 +151,18 @@ export class GithubFetcherService {
 
     this.logger.log(`Fetching info for ${owner}/${repo}`);
 
-    // 2. Build prompt
-    const prompt = this.buildPrompt(githubUrl);
+    // 2. First, try to fetch structured data from GitHub API (more reliable)
+    const githubApiData = await this.fetchFromGitHubAPI(owner, repo);
 
-    // 3. Get auth token and optional custom base URL
+    // 3. Build prompt
+    const prompt = this.buildPrompt(githubUrl, githubApiData);
+
+    // 4. Get auth token and optional custom base URL
     const authToken = this.configService.get<string>('ANTHROPIC_AUTH_TOKEN')!;
     const baseUrl = this.configService.get<string>('ANTHROPIC_BASE_URL');
 
     try {
-      // 4. Dynamically import and call Agent SDK query (ESM-only package)
+      // 5. Dynamically import and call Agent SDK query (ESM-only package)
       const { query } = await import('@anthropic-ai/claude-agent-sdk');
 
       const response = query({
@@ -220,10 +243,66 @@ export class GithubFetcherService {
   /**
    * Build prompt for Agent SDK
    */
-  private buildPrompt(githubUrl: string): string {
-    return `${SYSTEM_PROMPT}
+  private buildPrompt(githubUrl: string, githubApiData?: GitHubAPIRepoData): string {
+    let prompt = `${SYSTEM_PROMPT}
 
 请分析以下 GitHub 仓库：${githubUrl}`;
+
+    // If we have GitHub API data, include it for reference
+    if (githubApiData) {
+      prompt += `
+
+**参考信息（来自 GitHub API）：**
+- 仓库名称: ${githubApiData.name}
+- 描述: ${githubApiData.description || '无'}
+- 星标数: ${githubApiData.stargazers_count}
+- Fork 数: ${githubApiData.forks_count}
+- Open Issues: ${githubApiData.open_issues_count}
+- 主要语言: ${githubApiData.language || '未知'}
+- 主题标签: ${githubApiData.topics?.join(', ') || '无'}
+- 开源协议: ${githubApiData.license?.name || '无'}
+- 主页: ${githubApiData.homepage || '无'}
+- 更新时间: ${githubApiData.updated_at}
+
+请根据这些参考信息返回 JSON，但请根据你浏览仓库时的实际观察来修正语言和分类（API 的语言信息可能不够准确）。`;
+    }
+
+    return prompt;
+  }
+
+  /**
+   * Fetch repository data from GitHub API (no auth required for public repos)
+   */
+  private async fetchFromGitHubAPI(
+    owner: string,
+    repo: string
+  ): Promise<GitHubAPIRepoData | undefined> {
+    const url = `https://api.github.com/repos/${owner}/${repo}`;
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          // Optionally add GitHub token if available (higher rate limits)
+          ...(this.configService.get<string>('GITHUB_TOKEN')
+            ? { Authorization: `Bearer ${this.configService.get<string>('GITHUB_TOKEN')}` }
+            : {}),
+        },
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      });
+
+      if (!response.ok) {
+        this.logger.warn(`GitHub API request failed: ${response.status}`);
+        return undefined;
+      }
+
+      const data = (await response.json()) as GitHubAPIRepoData;
+      this.logger.debug(`GitHub API data fetched: stars=${data.stargazers_count}, language=${data.language}`);
+      return data;
+    } catch (error) {
+      this.logger.warn(`GitHub API fetch failed: ${this.getErrorMessage(error)}`);
+      return undefined;
+    }
   }
 
   /**

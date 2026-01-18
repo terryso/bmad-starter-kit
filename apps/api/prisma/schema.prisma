@@ -56,6 +56,8 @@ model Project {
   description     String          @db.Text      // 项目描述
   owner           String                        // 所有者用户名 (如: "anthropics")
   stars           Int                           // 星标数
+  forks           Int            @default(0)    // Fork 数量
+  openIssues      Int            @default(0)    // Open Issues 数量
   language        String?                       // 主要编程语言
   topics          String[]                      // GitHub Topics 标签
   githubUpdatedAt DateTime?                    // GitHub 仓库最后更新时间

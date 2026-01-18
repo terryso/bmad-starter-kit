@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -57,37 +56,41 @@ export function ShowcaseGrid({ data, isLoading, error, onPageChange }: ShowcaseG
         ))}
       </div>
 
-      {/* 分页 */}
-      {meta.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(meta.page - 1)}
-            disabled={meta.page === 1}
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            上一页
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            第 {meta.page} / {meta.totalPages} 页
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(meta.page + 1)}
-            disabled={meta.page === meta.totalPages}
-          >
-            下一页
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
+      {/* 分页 - 多页时显示完整分页控件，单页时只显示总数 */}
+      {meta.totalPages > 1 ? (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            共 {meta.total} 个项目
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(meta.page - 1)}
+              disabled={meta.page === 1}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              上一页
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              第 {meta.page} / {meta.totalPages} 页
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(meta.page + 1)}
+              disabled={meta.page === meta.totalPages}
+            >
+              下一页
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
         </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          共 {meta.total} 个项目
+        </p>
       )}
-
-      {/* 结果统计 */}
-      <p className="text-center text-sm text-muted-foreground">
-        共 {meta.total} 个项目
-      </p>
     </div>
   );
 }

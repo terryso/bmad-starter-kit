@@ -273,6 +273,8 @@ export class AdminService {
           description: true,
           owner: true,
           stars: true,
+          forks: true,
+          openIssues: true,
           language: true,
           category: true,
           topics: true,

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { showcaseApi } from '@/lib/api';
 import type { ProjectStatus } from '@bmad-starter-kit/shared';
-import { FolderOpen, Trash2, ExternalLink, Github, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { FolderOpen, Trash2, ExternalLink, Github, ChevronLeft, ChevronRight, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { SubmitProjectDialog } from '@/components/showcase/SubmitProjectDialog';
 import type { MyProject } from '@bmad-starter-kit/shared';
 
 const STATUS_LABELS: Record<ProjectStatus, string> = {
@@ -57,6 +58,7 @@ function MyProjectsContent() {
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | undefined>(undefined);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const pageSize = 10;
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
 
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; project: MyProject | null }>({
     open: false,
@@ -180,7 +182,7 @@ function MyProjectsContent() {
   return (
     <div className="space-y-6">
       {/* 页面头部 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg">
             <FolderOpen className="w-6 h-6 text-primary" />
@@ -193,51 +195,66 @@ function MyProjectsContent() {
           </div>
         </div>
 
-        {/* 状态筛选 */}
-        <div className="flex gap-2">
-          <Button
-            variant={statusFilter === undefined ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter(undefined);
-              setPage(1);
-            }}
-          >
-            全部
-          </Button>
-          <Button
-            variant={statusFilter === 'PENDING' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('PENDING');
-              setPage(1);
-            }}
-            disabled={!hasPending && statusFilter !== 'PENDING'}
-          >
-            待审核
-          </Button>
-          <Button
-            variant={statusFilter === 'APPROVED' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('APPROVED');
-              setPage(1);
-            }}
-            disabled={!hasApproved && statusFilter !== 'APPROVED'}
-          >
-            已批准
-          </Button>
-          <Button
-            variant={statusFilter === 'REJECTED' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('REJECTED');
-              setPage(1);
-            }}
-            disabled={!hasRejected && statusFilter !== 'REJECTED'}
-          >
-            已拒绝
-          </Button>
+        {/* 右侧操作区 */}
+        <div className="flex items-center gap-2">
+          {/* 提交项目按钮 */}
+          <SubmitProjectDialog
+            open={submitDialogOpen}
+            onOpenChange={setSubmitDialogOpen}
+            trigger={
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                提交项目
+              </Button>
+            }
+          />
+
+          {/* 状态筛选 */}
+          <div className="flex gap-2">
+            <Button
+              variant={statusFilter === undefined ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setStatusFilter(undefined);
+                setPage(1);
+              }}
+            >
+              全部
+            </Button>
+            <Button
+              variant={statusFilter === 'PENDING' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setStatusFilter('PENDING');
+                setPage(1);
+              }}
+              disabled={!hasPending && statusFilter !== 'PENDING'}
+            >
+              待审核
+            </Button>
+            <Button
+              variant={statusFilter === 'APPROVED' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setStatusFilter('APPROVED');
+                setPage(1);
+              }}
+              disabled={!hasApproved && statusFilter !== 'APPROVED'}
+            >
+              已批准
+            </Button>
+            <Button
+              variant={statusFilter === 'REJECTED' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setStatusFilter('REJECTED');
+                setPage(1);
+              }}
+              disabled={!hasRejected && statusFilter !== 'REJECTED'}
+            >
+              已拒绝
+            </Button>
+          </div>
         </div>
       </div>
 
