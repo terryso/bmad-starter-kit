@@ -14,6 +14,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Showcase from "./pages/showcase/Showcase";
 import ProjectDetail from "./pages/showcase/ProjectDetail";
+import MyProjects from "./pages/showcase/MyProjects";
 import { ProtectedRoute } from "@/components/routes/ProtectedRoute";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 
@@ -45,6 +46,7 @@ const App = () => (
           {/* 受保护的路由 */}
           <Route path="/" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/showcase/my-projects" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
 
           {/* 管理员路由 */}
           <Route path="/admin" element={<ProtectedRoute><Stats /></ProtectedRoute>} />

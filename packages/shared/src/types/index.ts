@@ -48,4 +48,8 @@ export type {
   RelatedProjectsResponse,
   PendingProject,
   PendingProjectsListResponse,
+  ProjectStatus,
+  MyProject,
+  MyProjectsListResponse,
+  GetMyProjectsParams,
 } from './showcase.types';

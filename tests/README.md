@@ -14,14 +14,24 @@
 
 ```
 tests/
+├── api/                    # API 集成测试文件
+│   ├── auth.spec.ts        # 认证 API 测试
+│   ├── admin.spec.ts       # 管理员 API 测试
+│   ├── user-profile.spec.ts # 用户资料 API 测试
+│   ├── showcase.spec.ts    # 项目展示 API 测试
+│   ├── admin-showcase.spec.ts # 管理员审核 API 测试
+│   ├── project-detail.spec.ts # 项目详情 API 测试
+│   ├── my-projects.spec.ts # 我的项目 API 测试
+│   └── fixtures.ts         # API 测试 fixtures
 ├── e2e/                    # E2E 测试文件
-│   ├── admin-api.spec.ts   # 管理员 API 测试
-│   ├── auth-api.spec.ts    # 认证 API 测试
-│   ├── showcase-api.spec.ts # 项目展示 API 测试
 │   ├── project-submission.spec.ts # 项目提交 E2E 测试
+│   ├── my-projects.spec.ts # 我的项目管理 E2E 测试
 │   ├── auth.spec.ts        # 认证流程测试
 │   ├── admin.spec.ts       # 管理员功能测试
-│   └── ...
+│   ├── profile.spec.ts     # 用户资料页面测试
+│   ├── showcase-browse.spec.ts # 项目展示浏览测试
+│   ├── project-detail.spec.ts # 项目详情页面测试
+│   └── admin-showcase.spec.ts # 管理员审核界面测试
 ├── support/                # 测试基础设施
 │   ├── fixtures/           # 测试 Fixtures
 │   │   ├── index.ts        # Fixture 入口

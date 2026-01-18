@@ -134,3 +134,51 @@ export interface PendingProjectsListResponse {
     totalPages: number;
   };
 }
+
+/**
+ * 项目状态枚举
+ */
+export type ProjectStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+/**
+ * 我的项目接口
+ */
+export interface MyProject {
+  id: string;
+  repositoryName: string;
+  description: string;
+  owner: string;
+  stars: number;
+  language: string | null;
+  topics: string[];
+  category: ProjectCategory;
+  suggestedTags: string[];
+  screenshotUrl: string | null;
+  githubUrl: string;
+  status: ProjectStatus;
+  createdAt: string;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+}
+
+/**
+ * 我的项目列表响应
+ */
+export interface MyProjectsListResponse {
+  items: MyProject[];
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
+
+/**
+ * 我的项目查询参数
+ */
+export interface GetMyProjectsParams {
+  page?: number;
+  pageSize?: number;
+  status?: ProjectStatus;
+}

@@ -8,6 +8,7 @@ import {
   Get,
   Query,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
@@ -16,10 +17,12 @@ import {
   ProjectsListResponse,
   ProjectDetailResponse,
   RelatedProjectsResponse,
+  MyProjectsListResponse,
 } from './showcase.service';
 import { SubmitProjectDto } from './dto/submit-project.dto';
 import { GetProjectsDto } from './dto/get-projects.dto';
 import { GetProjectByIdDto } from './dto/get-project-by-id.dto';
+import { MyProjectsQueryDto } from './dto/my-projects-query.dto';
 import { JwtAuthGuard } from '../../modules/auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserData } from '../../common/decorators';
 import { ApiResponse } from '@bmad-starter-kit/shared';
@@ -141,5 +144,55 @@ export class ShowcaseController {
       message: '获取相关项目成功',
       data: result,
     };
+  }
+
+  /**
+   * 获取当前用户提交的项目列表
+   * GET /api/v1/showcase/my-projects
+   *
+   * 需要认证
+   *
+   * @param params 查询参数（分页、状态筛选）
+   * @param user 当前认证用户
+   * @returns 用户的项目列表和分页信息
+   */
+  @Get('my-projects')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getMyProjects(
+    @Query() params: MyProjectsQueryDto,
+    @CurrentUser() user: CurrentUserData,
+  ): Promise<ApiResponse<MyProjectsListResponse>> {
+    const result = await this.showcaseService.getMyProjects(user.userId, params);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '获取我的项目成功',
+      data: result,
+    };
+  }
+
+  /**
+   * 删除用户提交的项目
+   * DELETE /api/v1/showcase/my-projects/:id
+   *
+   * 需要认证
+   * 只能删除状态为 PENDING 或 REJECTED 的项目
+   * 已批准的项目不能删除
+   *
+   * @param id 项目 ID
+   * @param user 当前认证用户
+   * @returns 204 No Content
+   * @throws 404 如果项目不存在
+   * @throws 409 如果项目已批准或不是用户提交的
+   */
+  @Delete('my-projects/:id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteMyProject(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserData,
+  ): Promise<void> {
+    await this.showcaseService.deleteMyProject(id, user.userId);
   }
 }

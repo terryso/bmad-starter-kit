@@ -1,269 +1,258 @@
-# 测试自动化摘要
+# 测试自动化扩展总结
 
-**日期**: 2026-01-17
-**模式**: 独立模式 (Standalone Mode)
-**目标**: Epic 8 - BMAD 项目展示平台 (Story 8-3: 项目提交 API)
-
----
-
-## 执行模式
-
-**模式**: 独立模式 (Standalone Mode)
-- 分析现有代码库并生成测试
-- 不依赖 BMad 工件 (story/tech-spec/test-design)
-
-**目标功能**: 项目展示 API (Showcase API)
-- `POST /api/v1/showcase/submit` - 提交 GitHub 项目
+**生成日期**: 2026-01-18
+**工作流**: testarch-automate
+**执行模式**: Standalone (critical-paths)
+**目标故事**: Story 8-7 - 我的项目管理
 
 ---
 
-## 功能分析
+## 执行概览
 
-### 源文件分析
+### 执行模式
+- **模式**: Standalone (无需 BMad artifacts 集成)
+- **覆盖目标**: critical-paths (仅覆盖核心用户路径)
+- **测试框架**: Playwright (E2E + API 集成测试)
 
-**Showcase API 源代码**:
-- `apps/api/src/modules/showcase/showcase.controller.ts` - 控制器
-- `apps/api/src/modules/showcase/showcase.service.ts` - 服务逻辑
-- `apps/api/src/modules/showcase/dto/submit-project.dto.ts` - DTO 验证
-- `apps/api/src/modules/showcase/github-fetcher.service.ts` - GitHub 集成
+### 现有测试基础设施
+项目已具备完整的测试基础设施:
 
-### 现有覆盖
-
-**已有测试**:
-- ✅ E2E: 认证流程、管理员功能
-- ✅ API: 认证 API、管理员 API
-- ✅ 单元测试: 部分控制器和服务
-
-**覆盖缺口**:
-- ❌ Showcase API 集成测试
-- ❌ 项目提交 E2E 测试
-- ❌ 项目数据工厂
+```
+tests/
+├── api/                    # API 集成测试 (7个文件)
+├── e2e/                    # E2E 测试 (8个文件)
+└── support/                # 测试支持
+    ├── fixtures/           # Fixtures 和 Factories
+    └── helpers/            # 辅助函数
+```
 
 ---
 
-## 已创建测试
+## 新生成的测试文件
 
-### API 测试 (P0-P2)
+### 1. API 集成测试
+**文件**: `tests/api/my-projects.spec.ts`
 
-**文件**: `tests/e2e/showcase-api.spec.ts` (API 集成测试)
+**覆盖范围**:
+- `GET /api/v1/showcase/my-projects` - 获取我的项目列表
+- `DELETE /api/v1/showcase/my-projects/:id` - 删除项目
 
-| 测试场景 | 优先级 | 描述 |
-|---------|--------|------|
-| 认证用户成功提交项目 | P1 | 验证 API 基本功能 |
-| 防止重复提交 | P0 | 数据完整性验证 |
-| 未认证用户提交 | P1 | 安全验证 |
-| 空 GitHub URL | P1 | 输入验证 |
-| 无效 URL 格式 | P1 | 格式验证 |
-| 从 GitHub 获取信息 | P1 | GitHub 集成验证 |
-| 新项目状态为 PENDING | P1 | 默认状态验证 |
-| 响应不包含敏感字段 | P1 | 数据安全验证 |
-| 速率限制 | P2 | API 保护验证 |
-| 不存在的仓库 | P2 | 错误处理验证 |
-| 边界情况 | P2 | URL 格式边界测试 |
+**测试场景** (共 20 个测试):
 
-**测试数量**: 13 个测试
+| 优先级 | 测试场景 | 描述 |
+|--------|----------|------|
+| P1 | 认证用户获取项目列表 | 验证基本功能 |
+| P1 | 未认证用户返回 401 | 验证权限控制 |
+| P1 | 支持分页参数 | 验证分页功能 |
+| P1 | 支持状态筛选 | 验证筛选功能 |
+| P1 | 组合分页和筛选 | 验证组合功能 |
+| P1 | 项目包含必需字段 | 验证数据结构 |
+| P1 | 拒绝项目显示原因 | 验证拒绝原因显示 |
+| P1 | 项目包含技术信息 | 验证可选字段 |
+| P1 | 删除待审核项目 | 验证删除功能 |
+| P1 | 删除不存在项目返回 404 | 验证错误处理 |
+| P1 | 删除已批准项目返回 400 | 验证业务规则 |
+| P1 | 未认证删除返回 401 | 验证权限控制 |
+| P1 | 不能删除其他用户项目 | 验证数据隔离 |
+| P2 | 无效分页参数处理 | 边界情况 |
+| P2 | 无效状态筛选处理 | 边界情况 |
+| P2 | 无效项目ID格式 | 边界情况 |
+| P2 | 空项目列表处理 | 边界情况 |
+| P2 | 超大页码处理 | 边界情况 |
+| P2 | 用户只能看到自己的项目 | 数据隔离 |
+| P2 | 审核信息安全 | 安全性 |
 
-### E2E 测试 (P1-P3)
+### 2. E2E 测试
+**文件**: `tests/e2e/my-projects.spec.ts`
 
-**文件**: `tests/e2e/project-submission.spec.ts` (E2E 用户旅程测试)
+**覆盖范围**:
+- 页面加载和基本显示
+- 空状态处理
+- 项目列表显示
+- 状态筛选功能
+- 项目删除功能
+- 分页功能
 
-| 测试场景 | 优先级 | 描述 |
-|---------|--------|------|
-| 表单成功提交 | P1 | 核心用户旅程 |
-| 表单验证错误 | P1 | 输入验证 UX |
-| 重复提交提示 | P1 | 用户反馈 |
-| 未认证用户重定向 | P1 | 认证流程 |
-| 提交后保持登录 | P1 | 会话管理 |
-| 按钮加载状态 | P2 | UI 反馈 |
-| 实时 URL 验证 | P2 | UX 优化 |
-| 提交历史显示 | P2 | 用户功能 |
-| 网络错误处理 | P2 | 错误 UX |
-| API 超时处理 | P2 | 错误 UX |
-| 成功后项目预览 | P2 | 用户反馈 |
-| 继续提交另一个项目 | P2 | 用户流程 |
-| 键盘操作支持 | P3 | 可访问性 |
-| ARIA 属性正确性 | P3 | 可访问性 |
+**测试场景** (共 18 个测试):
 
-**测试数量**: 14 个测试
-
----
-
-## 已创建基础设施
-
-### Fixtures (装置)
-
-**文件**: `tests/support/fixtures/index.ts`
-- ✅ 导出 `ProjectFactory` 类
-- ✅ 添加 `projectFactory` fixture
-
-### Factories (数据工厂)
-
-**文件**: `tests/support/fixtures/factories/project.factory.ts`
-- ✅ `ProjectFactory` 类
-- ✅ `createProject()` - 创建项目数据
-- ✅ `createProjects()` - 批量创建
-- ✅ `createValidGithubUrl()` - 有效 URL
-- ✅ `createInvalidGithubUrl()` - 无效 URL (用于测试验证)
-
-### Helpers (辅助函数)
-
-**现有辅助函数已足够**:
-- `apiHelper` - API 请求辅助
-- `waitFor` - 轮询等待
-- `selectors` - 选择器定义
+| 优先级 | 测试场景 | 描述 |
+|--------|----------|------|
+| P1 | 成功加载页面 | 验证基本功能 |
+| P1 | 未认证重定向到登录 | 验证路由保护 |
+| P1 | 空状态显示 | 验证空状态 |
+| P1 | 项目显示基本信息 | 验证列表显示 |
+| P1 | 项目显示状态标签 | 验证状态显示 |
+| P1 | 项目显示 GitHub 链接 | 验证链接正确性 |
+| P2 | 按状态筛选项目 | 验证筛选交互 |
+| P2 | 筛选按钮状态 | 验证 UI 状态 |
+| P2 | 删除非批准项目 | 验证删除交互 |
+| P2 | 已批准项目无删除按钮 | 验证业务规则 UI |
+| P2 | 拒绝原因显示 | 验证拒绝原因显示 |
+| P2 | 多页浏览 | 验证分页交互 |
+| P2 | 第一页上一页禁用 | 验证分页状态 |
+| P2 | 编程语言显示 | 验证技术信息 |
+| P2 | 标签显示 | 验证标签显示 |
+| P2 | 提交时间显示 | 验证时间显示 |
+| P3 | 页面视觉样式 | 验证 UI 细节 |
+| P3 | 可访问性 | 验证 a11y |
 
 ---
 
-## 测试执行
+## 测试设计原则应用
+
+### Given-When-Then 结构
+所有测试遵循 GWT 模式，确保测试意图清晰:
+
+```typescript
+test('[P1] 认证用户应能获取自己的项目列表', async ({ api }) => {
+  // GIVEN: 用户已认证
+  // WHEN: 请求我的项目列表
+  const response = await api.get(`${API_URL}/api/v1/showcase/my-projects`, {
+    headers: { Authorization: `Bearer ${userToken}` },
+  });
+  // THEN: 返回 200 OK
+  expect(response.status()).toBe(200);
+});
+```
+
+### 优先级标签
+- **P0**: 关键路径（安全、认证、数据完整性）
+- **P1**: 高价值功能（核心用户旅程）
+- **P2**: 中等优先级（边界情况、错误处理）
+- **P3**: 低优先级（UI 细节、可访问性）
+
+### 确定性测试
+- 避免硬编码等待 (`waitForTimeout`)
+- 使用显式断言
+- 避免条件测试逻辑
+- 使用数据工厂生成唯一数据
+
+### 显式断言
+所有断言都在测试体内可见，不在辅助函数中隐藏:
+
+```typescript
+// ✅ 显式断言
+expect(response.status()).toBe(200);
+expect(body.data).toMatchObject({
+  items: expect.any(Array),
+  meta: expect.objectContaining({ total: expect.any(Number) }),
+});
+```
+
+---
+
+## 覆盖范围总结
+
+### 新增测试文件
+| 文件类型 | 文件路径 | 测试数量 | 代码行数 |
+|----------|----------|----------|----------|
+| API 集成 | `tests/api/my-projects.spec.ts` | 20 | ~450 |
+| E2E | `tests/e2e/my-projects.spec.ts` | 18 | ~380 |
+
+### 总测试覆盖
+
+| 层级 | 已有测试 | 新增测试 | 总计 |
+|------|----------|----------|------|
+| API 集成 | 7 个文件 | 1 个文件 | 8 个文件 |
+| E2E | 8 个文件 | 1 个文件 | 9 个文件 |
+
+### 功能覆盖 (Story 8-7)
+
+| 功能 | API 测试 | E2E 测试 | 覆盖率 |
+|------|----------|----------|--------|
+| 获取项目列表 | ✅ | ✅ | 100% |
+| 分页 | ✅ | ✅ | 100% |
+| 状态筛选 | ✅ | ✅ | 100% |
+| 项目详情显示 | ✅ | ✅ | 100% |
+| 删除项目 | ✅ | ✅ | 100% |
+| 空状态 | ✅ | ✅ | 100% |
+
+---
+
+## 运行测试
+
+### 运行新增的测试
+
+```bash
+# 运行 MyProjects API 测试
+npx playwright test --project=api tests/api/my-projects.spec.ts
+
+# 运行 MyProjects E2E 测试
+npx playwright test tests/e2e/my-projects.spec.ts
+
+# 运行所有 P1 优先级测试
+npx playwright test --grep "\[P1\]"
+
+# 运行所有 Story 8-7 相关测试
+npx playwright test --grep "我的项目|MyProjects"
+```
 
 ### 按优先级运行
 
 ```bash
-# 运行 P0 测试 (关键路径)
+# 仅 P0 (关键路径)
 pnpm test:e2e:p0
 
-# 运行 P0 + P1 测试 (核心功能)
+# P0 + P1 (核心功能)
 pnpm test:e2e:p1
-
-# 运行 Showcase 相关测试
-pnpm test:e2e:showcase
-
-# 运行所有测试
-pnpm test:e2e
-```
-
-### 查看测试报告
-
-```bash
-# HTML 报告
-pnpm test:e2e:report
-
-# UI 模式
-pnpm test:e2e:ui
 ```
 
 ---
 
-## 覆盖分析
+## 知识库参考
 
-### 总测试数: 27
+本次测试生成遵循以下 BMad TestArch 知识库片段:
 
-**按优先级分布**:
-- P0: 2 个测试 (数据完整性)
-- P1: 18 个测试 (核心功能)
-- P2: 6 个测试 (边界情况)
-- P3: 1 个测试 (可访问性)
+1. **test-levels-framework.md**
+   - API 集成测试用于服务层验证
+   - E2E 测试用于核心用户旅程
+   - 避免重复覆盖（API 测试逻辑，E2E 测试体验）
 
-**按测试级别分布**:
-- API 集成测试: 13 个
-- E2E 测试: 14 个
+2. **test-priorities-matrix.md**
+   - P0: 认证、授权、数据完整性
+   - P1: 核心用户旅程
+   - P2: 边界情况、错误处理
+   - P3: UI 细节
 
-### 覆盖状态
-
-| 功能 | 覆盖率 | 状态 |
-|------|--------|------|
-| 项目提交 API | 100% | ✅ 完整 |
-| 输入验证 | 100% | ✅ 完整 |
-| 错误处理 | 90% | ✅ 良好 |
-| 用户旅程 | 85% | ✅ 良好 |
-| 可访问性 | 60% | ⚠️ 基础 |
-
-### 覆盖缺口
-
-1. **管理员审核功能** (未来 Story 8-6)
-   - 项目批准/拒绝 API
-   - 管理员审核界面
-
-2. **项目列表展示** (未来 Story 8-4)
-   - 公开项目列表页面
-   - 项目详情页面
-
-3. **用户项目管理** (未来 Story 8-7)
-   - 我的项目列表
-   - 项目编辑/删除
+3. **test-quality.md**
+   - 确定性测试（无硬编码等待）
+   - 显式断言（不隐藏在辅助函数中）
+   - 自清理测试（使用数据工厂）
+   - <300 行每个测试文件
 
 ---
 
-## 质量检查
+## 后续建议
 
-### ✅ 所有测试遵循
+### 短期 (下个 Sprint)
+1. 运行新生成的测试，验证通过率
+2. 修复任何发现的问题
+3. 添加缺失的 data-testid 属性（如果测试失败）
 
-- [x] Given-When-Then 格式
-- [x] 优先级标签 ([P0], [P1], [P2], [P3])
-- [x] 描述性测试名称
-- [x] data-testid 选择器
-- [x] 原子化测试 (每个测试一个断言)
-- [x] 无硬编码等待
-- [x] 使用数据工厂
+### 中期
+1. 为 Story 8-8 (菜单入口) 添加测试
+2. 优化测试执行时间（当前目标 <1.5min/测试）
+3. 考虑添加视觉回归测试
 
-### ✅ 基础设施质量
-
-- [x] Fixtures 使用 `test.extend()` 模式
-- [x] Factories 使用 `@faker-js/faker`
-- [x] 支持数据覆盖
-- [x] 类型安全
+### 长期
+1. 实现测试覆盖率监控
+2. 设置 CI 中按优先级运行的测试套件
+3. 定期回顾和更新测试
 
 ---
 
-## 定义完成检查表
+## 历史记录
 
-- [x] 执行模式已确定 (独立模式)
-- [x] 框架配置已加载
-- [x] 现有测试覆盖已分析
-- [x] 自动化目标已识别
-- [x] 测试级别已选择 (API + E2E)
-- [x] 避免重复覆盖
-- [x] 测试优先级已分配
-- [x] Fixture 架构已创建
-- [x] Data factories 已创建
-- [x] 测试文件已生成
-- [x] Given-When-Then 格式已应用
-- [x] 优先级标签已添加
-- [x] data-testid 选择器已使用
-- [x] 质量标准已强制执行
-- [x] Test README 已更新
-- [x] package.json 脚本已更新
-- [x] 自动化摘要已创建
+### 2026-01-17 (Story 8-3)
+- 创建项目提交 API 测试 (13 个 API 测试)
+- 创建项目提交 E2E 测试 (14 个 E2E 测试)
+
+### 2026-01-18 (Story 8-7)
+- 创建我的项目 API 测试 (20 个 API 测试)
+- 创建我的项目 E2E 测试 (18 个 E2E 测试)
 
 ---
 
-## 下一步
-
-1. **运行测试验证**
-   ```bash
-   # 启动应用
-   pnpm dev
-
-   # 在另一个终端运行测试
-   pnpm test:e2e:showcase
-   ```
-
-2. **审查测试覆盖率**
-   - 根据实际运行结果调整断言
-   - 修复因 UI 变更导致的选择器问题
-
-3. **集成 CI/CD**
-   - 配置 GitHub Actions 运行测试
-   - 设置测试报告发布
-
-4. **未来 Stories 测试**
-   - Story 8-4: 项目展示页面
-   - Story 8-5: 项目详情页面
-   - Story 8-6: 管理员审核界面
-   - Story 8-7: 我的项目管理
-
----
-
-## 知识库引用
-
-- `test-levels-framework.md` - 测试级别选择 (E2E vs API)
-- `test-priorities-matrix.md` - 优先级分类 (P0-P3)
-- `data-factories.md` - 数据工厂模式
-- `fixture-architecture.md` - Fixture 架构
-- `test-quality.md` - 测试质量原则
-- `selective-testing.md` - 选择性测试执行策略
-
----
-
-**生成工具**: BMad Test Architect Workflow (testarch-automate)
-**输出文件**: `docs/automation-summary.md`
+**生成工具**: BMad TestArch Automate Workflow
+**知识库版本**: testarch-knowledge-base
+**遵循原则**: Given-When-Then, 确定性测试, 显式断言

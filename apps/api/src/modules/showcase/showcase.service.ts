@@ -1,6 +1,7 @@
 import {
   Injectable,
   ConflictException,
+  ForbiddenException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
@@ -121,6 +122,37 @@ export interface RelatedProject {
 
 export interface RelatedProjectsResponse {
   items: RelatedProject[];
+}
+
+/**
+ * 我的项目响应接口
+ */
+export interface MyProject {
+  id: string;
+  repositoryName: string;
+  description: string;
+  owner: string;
+  stars: number;
+  language: string | null;
+  topics: string[];
+  category: ProjectCategory;
+  suggestedTags: string[];
+  screenshotUrl: string | null;
+  githubUrl: string;
+  status: ProjectStatus;
+  createdAt: string;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+}
+
+export interface MyProjectsListResponse {
+  items: MyProject[];
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
 }
 
 @Injectable()
@@ -451,5 +483,114 @@ export class ShowcaseService {
     }
 
     return { items };
+  }
+
+  /**
+   * 获取当前用户提交的项目列表
+   * @param userId 当前用户 ID
+   * @param params 查询参数（分页、状态筛选）
+   * @returns 用户的项目列表和分页元数据
+   */
+  async getMyProjects(
+    userId: string,
+    params: {
+      page?: number;
+      pageSize?: number;
+      status?: ProjectStatus;
+    },
+  ): Promise<MyProjectsListResponse> {
+    const page = params.page || 1;
+    const pageSize = params.pageSize || 10;
+    const skip = (page - 1) * pageSize;
+
+    // 构建查询条件
+    const where: any = {
+      submittedBy: userId, // 只返回当前用户提交的项目
+    };
+
+    // 状态筛选
+    if (params.status) {
+      where.status = params.status;
+    }
+
+    // 并行查询数据和总数
+    const [items, total] = await Promise.all([
+      this.prismaProject.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+        select: {
+          id: true,
+          repositoryName: true,
+          description: true,
+          owner: true,
+          stars: true,
+          language: true,
+          topics: true,
+          category: true,
+          suggestedTags: true,
+          screenshotUrl: true,
+          githubUrl: true,
+          status: true,
+          createdAt: true,
+          reviewedAt: true,
+          rejectionReason: true,
+        },
+      }),
+      this.prismaProject.count({ where }),
+    ]);
+
+    return {
+      items: items.map((item: any) => ({
+        ...item,
+        createdAt: item.createdAt.toISOString(),
+        reviewedAt: item.reviewedAt?.toISOString() || null,
+      })),
+      meta: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    };
+  }
+
+  /**
+   * 删除用户提交的项目
+   * 只能删除状态为 PENDING 或 REJECTED 的项目
+   * 已批准的项目不能删除
+   * @param projectId 项目 ID
+   * @param userId 当前用户 ID
+   * @throws NotFoundException 如果项目不存在
+   * @throws ConflictException 如果项目已批准或不是用户提交的
+   */
+  async deleteMyProject(projectId: string, userId: string): Promise<void> {
+    // 查询项目
+    const project = await this.prismaProject.findUnique({
+      where: { id: projectId },
+    });
+
+    // 检查项目是否存在
+    if (!project) {
+      throw new NotFoundException('项目不存在');
+    }
+
+    // 验证项目所有权
+    if (project.submittedBy !== userId) {
+      throw new ForbiddenException('无权删除此项目');
+    }
+
+    // 检查项目状态 - 已批准的项目不能删除
+    if (project.status === ProjectStatus.APPROVED) {
+      throw new ForbiddenException('已批准的项目不能删除');
+    }
+
+    // 删除项目
+    await this.prismaProject.delete({
+      where: { id: projectId },
+    });
+
+    this.logger.log(`Project ${projectId} deleted by user ${userId}`);
   }
 }

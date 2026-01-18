@@ -14,6 +14,8 @@ import type {
   RelatedProjectsResponse,
   PendingProjectsListResponse,
   PendingProject,
+  GetMyProjectsParams,
+  MyProjectsListResponse,
 } from '@bmad-starter-kit/shared';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -329,5 +331,26 @@ export const showcaseApi = {
       `/api/v1/showcase/projects/${id}/related`
     );
     return response.data.data;
+  },
+
+  /**
+   * 获取当前用户提交的项目列表（需要认证）
+   * @param params 查询参数（分页、状态筛选）
+   */
+  getMyProjects: async (params?: GetMyProjectsParams): Promise<MyProjectsListResponse> => {
+    const response = await api.get<ApiResponse<MyProjectsListResponse>>(
+      '/api/v1/showcase/my-projects',
+      { params }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * 删除当前用户提交的项目（需要认证）
+   * 只能删除状态为 PENDING 或 REJECTED 的项目
+   * @param id 项目 ID
+   */
+  deleteMyProject: async (id: string): Promise<void> => {
+    await api.delete(`/api/v1/showcase/my-projects/${id}`);
   },
 };

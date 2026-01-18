@@ -26,6 +26,7 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
  * - 全部测试: npx playwright test
  * - 仅 API: npx playwright test --project=api
  * - 仅 UI (chromium): npx playwright test --project=chromium-ui
+ * - 设置认证: pnpm test:e2e:setup
  */
 export default defineConfig({
   // 默认测试目录 (向后兼容)
@@ -48,6 +49,10 @@ export default defineConfig({
   expect: {
     timeout: 30 * 1000, // 30秒
   },
+
+  // 全局设置 - 用于创建认证文件
+  // 运行: pnpm exec playwright test --config=playwright.config.ts -g "@setup"
+  globalSetup: require.resolve('./tests/global-setup.ts'),
 
   // 测试环境默认配置
   use: {

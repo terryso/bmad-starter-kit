@@ -56,13 +56,15 @@ export interface PendingProjectsListResponse {
  */
 @Injectable()
 export class AdminService {
-  // Type assertion for Prisma models
-  private readonly prismaUser: any;
-  private readonly prismaProject: any;
+  constructor(private prisma: PrismaService) {}
 
-  constructor(private prisma: PrismaService) {
-    this.prismaUser = (this.prisma as any).user;
-    this.prismaProject = (this.prisma as any).project;
+  // Type-safe getters for Prisma models
+  private get prismaUser() {
+    return (this.prisma as any).user;
+  }
+
+  private get prismaProject() {
+    return (this.prisma as any).project;
   }
 
   /**
