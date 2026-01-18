@@ -117,8 +117,9 @@ export function UsersTable({ currentUserRole }: UsersTableProps) {
       setDeleteDialog({ open: false });
       // 刷新列表
       await fetchUsers(page);
-    } catch (error: any) {
-      toast.error(error.message || '删除失败');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '删除失败';
+      toast.error(message);
     } finally {
       setIsDeleting(false);
     }
@@ -140,8 +141,9 @@ export function UsersTable({ currentUserRole }: UsersTableProps) {
       setSelectedIds(new Set());
       // 刷新列表
       await fetchUsers(page);
-    } catch (error: any) {
-      toast.error(error.message || '批量删除失败');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '批量删除失败';
+      toast.error(message);
     } finally {
       setIsDeleting(false);
     }

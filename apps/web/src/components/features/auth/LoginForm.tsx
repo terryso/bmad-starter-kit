@@ -63,11 +63,12 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" data-testid="login-form">
           <div className="space-y-2">
             <Label htmlFor="email">邮箱</Label>
             <Input
               id="email"
+              data-testid="email-input"
               type="email"
               placeholder="your@email.com"
               disabled={isLoading}
@@ -82,6 +83,7 @@ export function LoginForm() {
             <Label htmlFor="password">密码</Label>
             <Input
               id="password"
+              data-testid="password-input"
               type="password"
               placeholder="••••••••"
               disabled={isLoading}
@@ -92,7 +94,7 @@ export function LoginForm() {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading} data-testid="login-button">
             {isLoading ? '登录中...' : '登录'}
           </Button>
         </form>
@@ -100,7 +102,7 @@ export function LoginForm() {
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
           还没有账号？{' '}
-          <Link to="/register" className="text-primary hover:underline font-medium">
+          <Link to="/register" className="text-primary hover:underline font-medium" data-testid="register-link">
             去注册
           </Link>
         </p>

@@ -52,6 +52,19 @@ export const selectors = {
     checkbox: (name: string) => `[data-testid="${name}-checkbox"]`,
     error: (name: string) => `[data-testid="${name}-error"]`,
   },
+
+  // 管理员审核
+  adminReview: {
+    pendingProjectCard: '[data-testid="pending-project-card"]',
+    approveButton: '[data-testid="approve-button"]',
+    rejectButton: '[data-testid="reject-button"]',
+    approveDialog: '[data-testid="approve-dialog"]',
+    rejectDialog: '[data-testid="reject-dialog"]',
+    rejectReasonInput: '[data-testid="reject-reason-input"]',
+    confirmApproveButton: '[data-testid="confirm-approve-button"]',
+    confirmRejectButton: '[data-testid="confirm-reject-button"]',
+    pendingCountBadge: '[data-testid="pending-count-badge"]',
+  },
 } as const;
 
 /**

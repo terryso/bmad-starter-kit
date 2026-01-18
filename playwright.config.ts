@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 // Use environment variables or defaults
 const API_URL = process.env.API_URL || 'http://localhost:3000';
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
 
 /**
  * Playwright 配置文件
@@ -128,4 +128,9 @@ export default defineConfig({
   //   reuseExistingServer: !process.env.CI,
   //   timeout: 120 * 1000,
   // },
+
+  // API 测试项目需要 API 服务器运行
+  // 如果 API 服务器未运行，这些测试会被跳过
+  // 可以通过以下命令启动 API 服务器:
+  //   pnpm --filter @bmad-starter-kit/api dev
 });

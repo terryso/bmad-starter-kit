@@ -172,6 +172,49 @@ export async function createAdminUser(
 }
 
 /**
+ * 辅助函数：提交项目并返回项目 ID
+ * 用于创建待审核的测试项目
+ */
+export async function submitPendingProject(
+  request: APIRequestContext,
+  userToken: string,
+  githubUrl?: string
+): Promise<{ id: string; status: string } | null> {
+  // 使用默认的测试 URL 或自定义 URL
+  const url = githubUrl || `https://github.com/test-project-${Date.now()}/repo`;
+
+  const submitResponse = await request.post(`${API_URL}/api/v1/showcase/submit`, {
+    headers: {
+      Authorization: `Bearer ${userToken}`,
+    },
+    data: { githubUrl: url },
+  });
+
+  // 201 = 新创建, 409 = 已存在（都可以使用）
+  if (submitResponse.status() === 201) {
+    const body = await submitResponse.json();
+    return { id: body.data.id, status: body.data.status };
+  } else if (submitResponse.status() === 409) {
+    // 项目已存在，尝试获取现有的 PENDING 项目
+    const listResponse = await request.get(`${API_URL}/api/v1/showcase`, {
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
+
+    if (listResponse.status() === 200) {
+      const listBody = await listResponse.json();
+      const pendingProject = listBody.data.items?.find((p: any) => p.status === 'PENDING');
+      if (pendingProject) {
+        return { id: pendingProject.id, status: pendingProject.status };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * API 测试基础扩展
  */
 export const test = base.extend<ApiTestFixtures>({

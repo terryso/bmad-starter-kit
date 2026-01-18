@@ -15,6 +15,9 @@ import { UsersService } from '../../users/users.service';
 import { UsersController } from '../../users/users.controller';
 import { AdminService } from '../../modules/admin/admin.service';
 import { AdminController } from '../../modules/admin/admin.controller';
+import { ShowcaseService } from '../../modules/showcase/showcase.service';
+import { ShowcaseController } from '../../modules/showcase/showcase.controller';
+import { GithubFetcherService } from '../../modules/showcase/github-fetcher.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -38,6 +41,8 @@ export class ApiIntegrationFixture {
   public usersController: UsersController;
   public adminService: AdminService;
   public adminController: AdminController;
+  public showcaseService: ShowcaseService;
+  public showcaseController: ShowcaseController;
   public prismaService: PrismaService;
   public jwtService: JwtService;
 
@@ -65,13 +70,31 @@ export class ApiIntegrationFixture {
         AuthController,
         UsersController,
         AdminController,
+        ShowcaseController,
       ],
       providers: [
         AuthService,
         UsersService,
         AdminService,
+        ShowcaseService,
         PrismaService,
         JwtService,
+        {
+          provide: GithubFetcherService,
+          useValue: {
+            fetchAndParseProject: jest.fn().mockResolvedValue({
+              repositoryName: 'test-repo',
+              description: 'Test description',
+              owner: 'testowner',
+              stars: 100,
+              language: 'TypeScript',
+              topics: ['test'],
+              category: 'WEB_APP',
+              suggestedTags: ['测试'],
+              githubUrl: 'https://github.com/testowner/test-repo',
+            }),
+          },
+        },
         {
           provide: 'CONFIG_SERVICE',
           useValue: {
@@ -115,6 +138,8 @@ export class ApiIntegrationFixture {
     this.usersController = this.module.get<UsersController>(UsersController);
     this.adminService = this.module.get<AdminService>(AdminService);
     this.adminController = this.module.get<AdminController>(AdminController);
+    this.showcaseService = this.module.get<ShowcaseService>(ShowcaseService);
+    this.showcaseController = this.module.get<ShowcaseController>(ShowcaseController);
     this.prismaService = this.module.get<PrismaService>(PrismaService);
     this.jwtService = this.module.get<JwtService>(JwtService);
 

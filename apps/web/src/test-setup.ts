@@ -1,8 +1,6 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
-
-// Mock webcrypto API for Node.js environment
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 if (!globalThis.crypto) {
   globalThis.crypto = {
@@ -20,14 +18,14 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
-})) as any;
+})) as unknown as typeof IntersectionObserver;
 
 // Mock ResizeObserver - needs to be a proper constructor
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
-})) as any;
+})) as unknown as typeof ResizeObserver;
 
 // Create a constructor function for ResizeObserver
 const ResizeObserverMock = vi.fn().mockImplementation(() => ({
@@ -44,13 +42,13 @@ Object.defineProperty(global, 'ResizeObserver', {
 // Polyfill for hasPointerCapture and setPointerCapture for Radix UI components
 // jsdom doesn't implement these methods, causing Radix UI Select to fail
 if (!Element.prototype.hasPointerCapture) {
-  Element.prototype.hasPointerCapture = vi.fn(() => false) as any;
+  Element.prototype.hasPointerCapture = vi.fn(() => false) as unknown as typeof Element.prototype.hasPointerCapture;
 }
 if (!Element.prototype.setPointerCapture) {
-  Element.prototype.setPointerCapture = vi.fn(() => undefined) as any;
+  Element.prototype.setPointerCapture = vi.fn(() => undefined) as unknown as typeof Element.prototype.setPointerCapture;
 }
 if (!Element.prototype.releasePointerCapture) {
-  Element.prototype.releasePointerCapture = vi.fn(() => undefined) as any;
+  Element.prototype.releasePointerCapture = vi.fn(() => undefined) as unknown as typeof Element.prototype.releasePointerCapture;
 }
 
 // Mock matchMedia

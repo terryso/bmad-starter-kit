@@ -32,7 +32,8 @@ describe('ProtectedRoute Component', () => {
   describe('[P1] Authenticated user access', () => {
     it('should render protected component when user is authenticated', async () => {
       // GIVEN: User is authenticated
-      (useAuthStore as any).mockImplementation((callback) => callback({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (useAuthStore as any).mockImplementation((callback: any) => callback({
         isAuthenticated: true,
         user: { id: '123', email: 'test@example.com' },
       }));
@@ -70,7 +71,8 @@ describe('ProtectedRoute Component', () => {
   describe('[P1] Unauthenticated user redirect', () => {
     it('should redirect to login when user is not authenticated', async () => {
       // GIVEN: Unauthenticated user
-      (useAuthStore as any).mockImplementation((callback) => callback({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (useAuthStore as any).mockImplementation((callback: any) => callback({
         isAuthenticated: false,
         user: null,
       }));
@@ -100,7 +102,8 @@ describe('ProtectedRoute Component', () => {
 
     it('should redirect to login when user is null but authenticated is true', async () => {
       // GIVEN: Auth flag is true but user is null
-      (useAuthStore as any).mockImplementation((callback) => callback({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (useAuthStore as any).mockImplementation((callback: any) => callback({
         isAuthenticated: true,
         user: null,
       }));
@@ -139,7 +142,8 @@ describe('ProtectedRoute Component', () => {
   describe('[P1] User data handling', () => {
     it('should render when both isAuthenticated and user are present', async () => {
       // GIVEN: User is authenticated with user data
-      (useAuthStore as any).mockImplementation((callback) => callback({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (useAuthStore as any).mockImplementation((callback: any) => callback({
         isAuthenticated: true,
         user: { id: 'user-123', email: 'user@example.com', name: 'Test User', role: 'USER' },
       }));
@@ -177,7 +181,8 @@ describe('ProtectedRoute Component', () => {
   describe('[P1] Admin user access', () => {
     it('should render for admin users', async () => {
       // GIVEN: Admin user is authenticated
-      (useAuthStore as any).mockImplementation((callback) => callback({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (useAuthStore as any).mockImplementation((callback: any) => callback({
         isAuthenticated: true,
         user: { id: 'admin-123', email: 'admin@example.com', name: 'Admin User', role: 'ADMIN' },
       }));

@@ -81,7 +81,7 @@ export default function ProfilePage() {
                 <User className="w-10 h-10 text-primary" />
               </div>
               <div>
-                <p className="text-lg font-medium">{user.name}</p>
+                <p className="text-lg font-medium" data-testid="user-name">{user.name}</p>
                 <p className="text-sm text-muted-foreground">{user.email}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {user.role === 'ADMIN' ? '管理员' : '普通用户'}
