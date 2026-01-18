@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "refresh_token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWtqZmxxb3UwMDA2bHdlcnBkOTE3eDJoIiwiZW1haWwiOiJlMmUtdGVzdC0xNzY4NzIyMzIyMjAxQGV4YW1wbGUuY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg3MjIzMjQsImV4cCI6MTc2OTMyNzEyNH0.XbcbMiX_Kyy7hogCEsjYIGGVMBGfB6dZZEWZqG96aOw",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1769327124.008371,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:8080",
+      "localStorage": [
+        {
+          "name": "auth-storage",
+          "value": "{\"state\":{\"user\":{\"id\":\"cmkjflqou0006lwerpd917x2h\",\"email\":\"e2e-test-1768722322201@example.com\",\"name\":\"E2E Test User 1768722322201\",\"role\":\"USER\",\"createdAt\":\"2026-01-18T07:45:22.783Z\"},\"isAuthenticated\":true,\"accessToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWtqZmxxb3UwMDA2bHdlcnBkOTE3eDJoIiwiZW1haWwiOiJlMmUtdGVzdC0xNzY4NzIyMzIyMjAxQGV4YW1wbGUuY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg3MjIzMjQsImV4cCI6MTc2ODcyNTkyNH0.AdPr2XgyqlD8ElXygH_ECxvQ0vpcwgJ74YqQTfJpbE4\"},\"version\":0}"
+        }
+      ]
+    }
+  ]
+}

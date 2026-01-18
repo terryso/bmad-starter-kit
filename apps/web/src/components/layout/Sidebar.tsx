@@ -46,7 +46,10 @@ export function Sidebar() {
       {/* Main Navigation */}
       <nav className="flex-1 px-2 lg:px-3 space-y-1">
         {navigation.map((item) => {
-          const isActive = location.pathname === item.href;
+          // For showcase, highlight when pathname starts with /showcase
+          const isActive = item.href === "/showcase"
+            ? location.pathname.startsWith("/showcase")
+            : location.pathname === item.href;
           return (
             <NavLink
               key={item.name}
@@ -72,7 +75,10 @@ export function Sidebar() {
               管理员
             </p>
             {adminNav.map((item) => {
-              const isActive = location.pathname === item.href;
+              // For admin/showcase, highlight when pathname starts with /admin/showcase
+              const isActive = item.href === "/admin/showcase"
+                ? location.pathname.startsWith("/admin/showcase")
+                : location.pathname === item.href;
               const showBadge = item.badge && pendingCount && pendingCount > 0;
               return (
                 <NavLink

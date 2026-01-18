@@ -18,13 +18,34 @@ const routeNames: Record<string, string> = {
   "/profile": "个人资料",
   "/admin": "系统统计",
   "/admin/users": "用户管理",
+  "/showcase": "项目展示",
+  "/showcase/my-projects": "我的项目",
 };
+
+// Helper function to get route name with wildcard support
+function getRouteName(pathname: string): string {
+  // Check for exact match first
+  if (routeNames[pathname]) {
+    return routeNames[pathname];
+  }
+  // Check for wildcard patterns (e.g., /showcase/:id where :id is numeric)
+  // This matches /showcase/123 but not /showcase/my-projects or /showcase/edit
+  const showcaseIdMatch = pathname.match(/^\/showcase\/(\d+)$/);
+  if (showcaseIdMatch) {
+    return "项目详情";
+  }
+  // Check admin/showcase for pending projects page
+  if (pathname.startsWith("/admin/showcase")) {
+    return "项目审核";
+  }
+  return "仪表盘";
+}
 
 export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, clearAuth } = useAuthStore();
-  const currentRoute = routeNames[location.pathname] || "仪表盘";
+  const currentRoute = getRouteName(location.pathname);
 
   const handleLogout = async () => {
     let apiSuccess = false;
