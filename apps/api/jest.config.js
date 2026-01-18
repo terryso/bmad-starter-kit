@@ -15,6 +15,8 @@ module.exports = {
   ],
   testEnvironment: 'node',
   setupFiles: ['<rootDir>/src/test-setup.ts'],
+  globalSetup: '<rootDir>/src/test-global-setup.ts',
+  globalTeardown: '<rootDir>/src/test-global-teardown.ts',
   moduleNameMapper: {
     '^@bmad-starter-kit/shared$': '<rootDir>/../../packages/shared/src/index.ts',
     '^@bmad-starter-kit/shared/(.*)$': '<rootDir>/../../packages/shared/src/$1',
@@ -28,4 +30,6 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/dist'],
   testPathIgnorePatterns: ['<rootDir>/dist'],
   maxWorkers: 1, // Avoid os.availableParallelism() issues
+  detectOpenHandles: true, // Detect and report open handles
+  forceExit: true, // Force Jest to exit after tests complete
 };
