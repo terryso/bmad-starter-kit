@@ -98,3 +98,39 @@ export interface RelatedProject {
 export interface RelatedProjectsResponse {
   items: RelatedProject[];
 }
+
+/**
+ * 待审核项目接口 (管理员审核)
+ */
+export interface PendingProject {
+  id: string;
+  repositoryName: string;
+  description: string;
+  owner: string;
+  stars: number;
+  language: string | null;
+  category: ProjectCategory;
+  topics: string[];
+  suggestedTags: string[];
+  screenshotUrl: string | null;
+  githubUrl: string;
+  submittedBy: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+  createdAt: string;
+}
+
+/**
+ * 待审核项目列表响应
+ */
+export interface PendingProjectsListResponse {
+  items: PendingProject[];
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}

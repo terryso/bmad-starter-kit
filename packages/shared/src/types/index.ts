@@ -46,4 +46,6 @@ export type {
   ProjectDetail,
   RelatedProject,
   RelatedProjectsResponse,
+  PendingProject,
+  PendingProjectsListResponse,
 } from './showcase.types';

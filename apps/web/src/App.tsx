@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import Users from "./pages/admin/Users";
 import Welcome from "./pages/admin/Welcome";
 import Stats from "./pages/admin/Stats";
+import AdminShowcase from "./pages/admin/AdminShowcase";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Showcase from "./pages/showcase/Showcase";
@@ -48,6 +49,7 @@ const App = () => (
           {/* 管理员路由 */}
           <Route path="/admin" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+          <Route path="/admin/showcase" element={<ProtectedRoute><AdminShowcase /></ProtectedRoute>} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -12,6 +12,8 @@ import type {
   ProjectsListResponse,
   ProjectDetail,
   RelatedProjectsResponse,
+  PendingProjectsListResponse,
+  PendingProject,
 } from '@bmad-starter-kit/shared';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -235,6 +237,62 @@ export const adminApi = {
     });
 
     return { success, failed, errors };
+  },
+
+  /**
+   * 获取待审核项目列表 (仅管理员)
+   * @param params 查询参数 (分页)
+   */
+  getPendingProjects: async (params?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<PendingProjectsListResponse> => {
+    const response = await api.get<{
+      data: PendingProjectsListResponse;
+      statusCode: number;
+      message: string;
+    }>('/api/v1/admin/showcase/pending', { params });
+    return response.data.data;
+  },
+
+  /**
+   * 获取待审核项目数量 (仅管理员)
+   * 用于显示徽章数量
+   */
+  getPendingProjectsCount: async (): Promise<number> => {
+    const response = await api.get<{
+      data: { count: number };
+      statusCode: number;
+      message: string;
+    }>('/api/v1/admin/showcase/pending/count');
+    return response.data.data.count;
+  },
+
+  /**
+   * 批准项目 (仅管理员)
+   * @param id 项目 ID
+   */
+  approveProject: async (id: string): Promise<PendingProject> => {
+    const response = await api.put<{
+      data: PendingProject;
+      statusCode: number;
+      message: string;
+    }>(`/api/v1/admin/showcase/${id}/approve`);
+    return response.data.data;
+  },
+
+  /**
+   * 拒绝项目 (仅管理员)
+   * @param id 项目 ID
+   * @param rejectionReason 拒绝原因
+   */
+  rejectProject: async (id: string, rejectionReason: string): Promise<PendingProject> => {
+    const response = await api.put<{
+      data: PendingProject;
+      statusCode: number;
+      message: string;
+    }>(`/api/v1/admin/showcase/${id}/reject`, { rejectionReason });
+    return response.data.data;
   },
 };
 

@@ -4,9 +4,12 @@ import {
   Users as UsersIcon,
   BarChart3,
   FolderOpen,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
+import { usePendingCount } from "@/hooks/usePendingCount";
+import { Badge } from "@/components/ui/badge";
 
 const navigation = [
   { name: "仪表盘", href: "/", icon: LayoutDashboard },
@@ -17,12 +20,14 @@ const navigation = [
 const adminNav = [
   { name: "系统统计", href: "/admin", icon: BarChart3 },
   { name: "用户管理", href: "/admin/users", icon: UsersIcon },
+  { name: "项目审核", href: "/admin/showcase", icon: Shield, badge: true },
 ];
 
 export function Sidebar() {
   const location = useLocation();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'ADMIN';
+  const { data: pendingCount } = usePendingCount();
 
   return (
     <aside className="w-16 lg:w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col py-6 transition-all duration-200">
@@ -68,6 +73,7 @@ export function Sidebar() {
             </p>
             {adminNav.map((item) => {
               const isActive = location.pathname === item.href;
+              const showBadge = item.badge && pendingCount && pendingCount > 0;
               return (
                 <NavLink
                   key={item.name}
@@ -80,8 +86,21 @@ export function Sidebar() {
                       : "text-sidebar-foreground"
                   )}
                 >
-                  <item.icon className="w-5 h-5 flex-shrink-0" strokeWidth={1.5} />
-                  <span className="hidden lg:block">{item.name}</span>
+                  <div className="relative flex-shrink-0">
+                    <item.icon className="w-5 h-5" strokeWidth={1.5} />
+                    {showBadge && (
+                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                      </span>
+                    )}
+                  </div>
+                  <span className="hidden lg:block flex-1">{item.name}</span>
+                  {showBadge && (
+                    <Badge variant="destructive" className="hidden lg:flex ml-auto text-xs">
+                      {pendingCount}
+                    </Badge>
+                  )}
                 </NavLink>
               );
             })}

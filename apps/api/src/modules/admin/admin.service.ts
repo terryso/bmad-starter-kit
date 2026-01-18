@@ -4,8 +4,49 @@ import { UsersQueryDto } from './dto/users-query.dto';
 import type { UsersListResponseDto } from './dto/user-response.dto';
 import type { SystemStatsDto } from './dto/stats-response.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { PendingProjectsQueryDto } from './dto/pending-projects-query.dto';
+import { RejectProjectDto } from './dto/reject-project.dto';
 import { Role } from '@prisma/client';
+import { ProjectStatus } from '../showcase/showcase.service';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@bmad-starter-kit/shared';
+
+/**
+ * Pending Project Response Interface
+ *
+ * Project data returned for admin review, includes submitter information
+ */
+export interface PendingProjectResponse {
+  id: string;
+  repositoryName: string;
+  description: string;
+  owner: string;
+  stars: number;
+  language: string | null;
+  category: string;
+  topics: string[];
+  suggestedTags: string[];
+  screenshotUrl: string | null;
+  githubUrl: string;
+  submittedBy: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+  createdAt: string;
+}
+
+/**
+ * Pending Projects List Response
+ */
+export interface PendingProjectsListResponse {
+  items: PendingProjectResponse[];
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
 
 /**
  * Admin Service
@@ -200,5 +241,221 @@ export class AdminService {
     await this.prismaUser.delete({
       where: { id: userId },
     });
+  }
+
+  /**
+   * Get Pending Projects
+   *
+   * Returns a paginated list of projects awaiting admin review.
+   * Only projects with PENDING status are returned.
+   *
+   * @param query Pagination parameters
+   * @returns Paginated list of pending projects with submitter info
+   */
+  async getPendingProjects(
+    query: PendingProjectsQueryDto,
+  ): Promise<PendingProjectsListResponse> {
+    const { page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE } = query;
+    const skip = (page - 1) * pageSize;
+
+    const [items, total] = await Promise.all([
+      this.prismaProject.findMany({
+        where: {
+          status: ProjectStatus.PENDING,
+        },
+        skip,
+        take: pageSize,
+        select: {
+          id: true,
+          repositoryName: true,
+          description: true,
+          owner: true,
+          stars: true,
+          language: true,
+          category: true,
+          topics: true,
+          suggestedTags: true,
+          screenshotUrl: true,
+          githubUrl: true,
+          submittedBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'asc', // Oldest submissions first
+        },
+      }),
+      this.prismaProject.count({
+        where: {
+          status: ProjectStatus.PENDING,
+        },
+      }),
+    ]);
+
+    return {
+      items,
+      meta: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    };
+  }
+
+  /**
+   * Get Pending Projects Count
+   *
+   * Returns the total number of projects awaiting review.
+   * Used for displaying badge counts in the admin UI.
+   *
+   * @returns Count of pending projects
+   */
+  async getPendingProjectsCount(): Promise<number> {
+    return this.prismaProject.count({
+      where: {
+        status: ProjectStatus.PENDING,
+      },
+    });
+  }
+
+  /**
+   * Approve Project
+   *
+   * Approves a pending project, changing its status to APPROVED.
+   * Records the admin user who approved and the timestamp.
+   *
+   * @param id Project ID to approve
+   * @param adminUserId ID of the admin performing the approval
+   * @returns Updated project information
+   * @throws NotFoundException if project doesn't exist
+   * @throws BadRequestException if project is not in PENDING status
+   */
+  async approveProject(
+    id: string,
+    adminUserId: string,
+  ): Promise<PendingProjectResponse> {
+    // Check if project exists and is in PENDING status
+    const project = await this.prismaProject.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    if (project.status !== ProjectStatus.PENDING) {
+      throw new BadRequestException(
+        `Cannot approve project with status ${project.status}`,
+      );
+    }
+
+    // Update project status to APPROVED
+    const updated = await this.prismaProject.update({
+      where: { id },
+      data: {
+        status: ProjectStatus.APPROVED,
+        reviewedBy: adminUserId,
+        reviewedAt: new Date(),
+      },
+      select: {
+        id: true,
+        repositoryName: true,
+        description: true,
+        owner: true,
+        stars: true,
+        language: true,
+        category: true,
+        topics: true,
+        suggestedTags: true,
+        screenshotUrl: true,
+        githubUrl: true,
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        createdAt: true,
+      },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Reject Project
+   *
+   * Rejects a pending project with a reason.
+   * Changes status to REJECTED and records the reason, admin, and timestamp.
+   *
+   * @param id Project ID to reject
+   * @param rejectDto Rejection reason
+   * @param adminUserId ID of the admin performing the rejection
+   * @returns Updated project information
+   * @throws NotFoundException if project doesn't exist
+   * @throws BadRequestException if project is not in PENDING status
+   */
+  async rejectProject(
+    id: string,
+    rejectDto: RejectProjectDto,
+    adminUserId: string,
+  ): Promise<PendingProjectResponse> {
+    // Check if project exists and is in PENDING status
+    const project = await this.prismaProject.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    if (project.status !== ProjectStatus.PENDING) {
+      throw new BadRequestException(
+        `Cannot reject project with status ${project.status}`,
+      );
+    }
+
+    // Update project status to REJECTED with reason
+    const updated = await this.prismaProject.update({
+      where: { id },
+      data: {
+        status: ProjectStatus.REJECTED,
+        rejectionReason: rejectDto.rejectionReason,
+        reviewedBy: adminUserId,
+        reviewedAt: new Date(),
+      },
+      select: {
+        id: true,
+        repositoryName: true,
+        description: true,
+        owner: true,
+        stars: true,
+        language: true,
+        category: true,
+        topics: true,
+        suggestedTags: true,
+        screenshotUrl: true,
+        githubUrl: true,
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        createdAt: true,
+      },
+    });
+
+    return updated;
   }
 }
