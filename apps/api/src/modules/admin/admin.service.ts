@@ -277,7 +277,7 @@ export class AdminService {
           suggestedTags: true,
           screenshotUrl: true,
           githubUrl: true,
-          submittedBy: {
+          submittedByUser: {
             select: {
               id: true,
               name: true,
@@ -297,8 +297,15 @@ export class AdminService {
       }),
     ]);
 
+    // Map Prisma relation names to API response field names
+    const mappedItems = items.map((item: any) => ({
+      ...item,
+      submittedBy: item.submittedByUser,
+      submittedByUser: undefined,
+    }));
+
     return {
-      items,
+      items: mappedItems,
       meta: {
         total,
         page,
@@ -376,7 +383,7 @@ export class AdminService {
         suggestedTags: true,
         screenshotUrl: true,
         githubUrl: true,
-        submittedBy: {
+        submittedByUser: {
           select: {
             id: true,
             name: true,
@@ -387,7 +394,12 @@ export class AdminService {
       },
     });
 
-    return updated;
+    // Map Prisma relation name to API response field name
+    return {
+      ...updated,
+      submittedBy: updated.submittedByUser,
+      submittedByUser: undefined,
+    } as PendingProjectResponse;
   }
 
   /**
@@ -445,7 +457,7 @@ export class AdminService {
         suggestedTags: true,
         screenshotUrl: true,
         githubUrl: true,
-        submittedBy: {
+        submittedByUser: {
           select: {
             id: true,
             name: true,
@@ -456,6 +468,11 @@ export class AdminService {
       },
     });
 
-    return updated;
+    // Map Prisma relation name to API response field name
+    return {
+      ...updated,
+      submittedBy: updated.submittedByUser,
+      submittedByUser: undefined,
+    } as PendingProjectResponse;
   }
 }

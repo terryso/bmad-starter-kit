@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api';
-import { Shield, CheckCircle, XCircle, Github, ExternalLink, Calendar, User } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, Github, ExternalLink, Calendar, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { APPROVE_DIALOG_TEXT, REJECT_DIALOG_TEXT } from '@/constants/showcase';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import type { PendingProject, PendingProjectsListResponse } from '@bmad-starter-kit/shared';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -31,8 +32,17 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default function AdminShowcasePage() {
+  return (
+    <DashboardLayout>
+      <AdminShowcaseContent />
+    </DashboardLayout>
+  );
+}
+
+function AdminShowcaseContent() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const pageSize = 12;
 
   const [approveDialog, setApproveDialog] = useState<{ open: boolean; id: string }>({
@@ -46,10 +56,19 @@ export default function AdminShowcasePage() {
   });
 
   // 获取待审核项目
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ['admin-pending-projects', page],
     queryFn: () => adminApi.getPendingProjects({ page, pageSize }),
+    placeholderData: keepPreviousData, // 翻页时保持旧数据
+    staleTime: 30000, // 30秒内不会重新请求
   });
+
+  // 标记首次加载完成
+  useEffect(() => {
+    if (!isLoading) {
+      setIsInitialLoad(false);
+    }
+  }, [isLoading]);
 
   // 批准项目
   const approveMutation = useMutation({
@@ -105,8 +124,8 @@ export default function AdminShowcasePage() {
     });
   };
 
-  // 加载状态
-  if (isLoading) {
+  // 加载状态 - 只在首次加载且无数据时显示骨架图
+  if (isInitialLoad && isLoading && !data) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2">
@@ -132,8 +151,8 @@ export default function AdminShowcasePage() {
     );
   }
 
-  // 错误状态
-  if (error) {
+  // 错误状态 - 只在无数据时显示错误页面
+  if (error && !data) {
     return (
       <Alert variant="destructive">
         <AlertDescription>
@@ -143,8 +162,8 @@ export default function AdminShowcasePage() {
     );
   }
 
-  // 无待审核项目
-  if (!data || data.items.length === 0) {
+  // 无待审核项目 - 只在非首次加载且有数据时显示
+  if (!isInitialLoad && data && data.items.length === 0 && !isFetching) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-4">
@@ -156,6 +175,11 @@ export default function AdminShowcasePage() {
         </p>
       </div>
     );
+  }
+
+  // 等待数据加载时返回 null（保持旧数据可见）
+  if (!data) {
+    return null;
   }
 
   return (
@@ -283,26 +307,33 @@ export default function AdminShowcasePage() {
 
       {/* 分页 */}
       {data.meta.totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-          >
-            上一页
-          </Button>
-          <span className="flex items-center px-4 text-sm text-muted-foreground">
-            第 {page} / {data.meta.totalPages} 页
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === data.meta.totalPages}
-            onClick={() => setPage(page + 1)}
-          >
-            下一页
-          </Button>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            共 {data.meta.total} 个待审核项目
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              上一页
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              第 {page} / {data.meta.totalPages} 页
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(page + 1)}
+              disabled={page === data.meta.totalPages}
+            >
+              下一页
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
         </div>
       )}
 
