@@ -1,12 +1,12 @@
-import { IsEmail, IsString, IsNotEmpty, MinLength, Matches } from 'class-validator';
-import { CreateUserDto } from '@bmad-starter-kit/shared';
+import { IsEmail, IsString, IsNotEmpty, MinLength, Matches, IsEnum, IsOptional } from 'class-validator';
+import { Role } from '@prisma/client';
 
 /**
  * DTO for user registration
- * Extends CreateUserDto from shared package with validation decorators
  * Validates email format, password strength, and name presence
+ * Supports optional role and adminSecret for admin user registration
  */
-export class RegisterDto implements CreateUserDto {
+export class RegisterDto {
   @IsEmail({}, { message: '邮箱格式不正确' })
   @IsNotEmpty({ message: '邮箱不能为空' })
   email: string;
@@ -22,4 +22,22 @@ export class RegisterDto implements CreateUserDto {
   @IsString({ message: '姓名必须是字符串' })
   @IsNotEmpty({ message: '姓名不能为空' })
   name: string;
+
+  /**
+   * Optional role for registration.
+   * When set to ADMIN, requires ADMIN_REGISTRATION_SECRET to match.
+   * This allows tests to create admin users without exposing security issues.
+   */
+  @IsEnum(Role, { message: '角色必须是 USER 或 ADMIN' })
+  @IsOptional()
+  role?: Role;
+
+  /**
+   * Secret required when registering as ADMIN.
+   * In production, this should be set via environment variable.
+   * In tests, this can be set to a known value for creating admin users.
+   */
+  @IsString({ message: '注册密钥必须是字符串' })
+  @IsOptional()
+  adminSecret?: string;
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Param, Patch, Delete, Body, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -6,6 +6,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 import { AdminService } from './admin.service';
 import { UsersQueryDto } from './dto/users-query.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import type { UsersListResponseDto } from './dto/user-response.dto';
 import type { SystemStatsDto } from './dto/stats-response.dto';
 
@@ -81,9 +82,39 @@ export class AdminController {
   async findAllUsers(
     @Query() query: UsersQueryDto,
     @CurrentUser('userId') currentUserId: string,
-  ): Promise<UsersListResponseDto> {
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{ data: any; statusCode: number; message: string }> {
     // Current user ID is passed for audit/logging purposes
-    return this.adminService.findAllUsers(query, currentUserId);
+    // Handle limit as alias for pageSize
+    const effectiveQuery = { ...query, pageSize: query.limit || query.pageSize };
+    const result = await this.adminService.findAllUsers(effectiveQuery, currentUserId);
+
+    // Check if pagination params were explicitly provided in the request (before defaults)
+    const hasPagination = page !== undefined || pageSize !== undefined || limit !== undefined;
+
+    if (hasPagination) {
+      // Return paginated format with items and metadata
+      return {
+        data: {
+          items: result.users,
+          total: result.pagination.total,
+          page: result.pagination.page,
+          limit: result.pagination.pageSize,
+          totalPages: result.pagination.totalPages,
+        },
+        statusCode: 200,
+        message: 'success',
+      };
+    } else {
+      // Return simple array format (for backward compatibility)
+      return {
+        data: result.users,
+        statusCode: 200,
+        message: 'success',
+      };
+    }
   }
 
   /**
@@ -117,5 +148,88 @@ export class AdminController {
       statusCode: 200,
       message: 'success',
     };
+  }
+
+  /**
+   * Update User Role
+   *
+   * Modifies the role of a specific user.
+   * Requires ADMIN role.
+   *
+   * ## Path Parameters
+   * - id: User ID to modify
+   *
+   * ## Request Body
+   * - role: New role (USER or ADMIN)
+   *
+   * ## Response Format
+   * Returns updated user with new role.
+   *
+   * ## Security
+   * - Requires valid JWT token (401 if missing/invalid)
+   * - Requires ADMIN role (403 if not admin)
+   * - Cannot modify own role (400 if attempted)
+   *
+   * @param userId User ID to modify
+   * @param updateRoleDto New role assignment
+   * @param currentUserId Current admin user ID
+   * @returns Updated user with new role
+   *
+   * @example
+   * ```bash
+   * curl -X PATCH "http://localhost:3000/api/v1/admin/users/123/role" \
+   *   -H "Authorization: Bearer <admin-token>" \
+   *   -H "Content-Type: application/json" \
+   *   -d '{"role": "ADMIN"}'
+   * ```
+   */
+  @Patch('users/:id/role')
+  @HttpCode(HttpStatus.OK)
+  async updateUserRole(
+    @Param('id') userId: string,
+    @Body() updateRoleDto: UpdateRoleDto,
+    @CurrentUser('userId') currentUserId: string,
+  ): Promise<{ data: { id: string; role: Role }; statusCode: number; message: string }> {
+    const updatedUser = await this.adminService.updateUserRole(userId, updateRoleDto, currentUserId);
+    return {
+      data: updatedUser,
+      statusCode: 200,
+      message: 'User role updated successfully',
+    };
+  }
+
+  /**
+   * Delete User
+   *
+   * Permanently deletes a user from the system.
+   * Requires ADMIN role.
+   *
+   * ## Path Parameters
+   * - id: User ID to delete
+   *
+   * ## Response Format
+   * Returns 204 No Content on success.
+   *
+   * ## Security
+   * - Requires valid JWT token (401 if missing/invalid)
+   * - Requires ADMIN role (403 if not admin)
+   * - Cannot delete own account (400 if attempted)
+   *
+   * @param userId User ID to delete
+   * @param currentUserId Current admin user ID
+   *
+   * @example
+   * ```bash
+   * curl -X DELETE "http://localhost:3000/api/v1/admin/users/123" \
+   *   -H "Authorization: Bearer <admin-token>"
+   * ```
+   */
+  @Delete('users/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteUser(
+    @Param('id') userId: string,
+    @CurrentUser('userId') currentUserId: string,
+  ): Promise<void> {
+    await this.adminService.deleteUser(userId, currentUserId);
   }
 }

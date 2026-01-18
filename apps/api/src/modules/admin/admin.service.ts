@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UsersQueryDto } from './dto/users-query.dto';
 import type { UsersListResponseDto } from './dto/user-response.dto';
 import type { SystemStatsDto } from './dto/stats-response.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { Role } from '@prisma/client';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@bmad-starter-kit/shared';
 
 /**
@@ -13,7 +15,14 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@bmad-starter-ki
  */
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  // Type assertion for Prisma models
+  private readonly prismaUser: any;
+  private readonly prismaProject: any;
+
+  constructor(private prisma: PrismaService) {
+    this.prismaUser = (this.prisma as any).user;
+    this.prismaProject = (this.prisma as any).project;
+  }
 
   /**
    * Find all users with pagination and filtering
@@ -46,7 +55,7 @@ export class AdminService {
 
     // Parallel queries for data and count (better performance)
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({
+      this.prismaUser.findMany({
         where,
         skip,
         take: limitedPageSize,
@@ -61,7 +70,7 @@ export class AdminService {
           createdAt: 'desc',
         },
       }),
-      this.prisma.user.count({ where }),
+      this.prismaUser.count({ where }),
     ]);
 
     return {
@@ -85,7 +94,7 @@ export class AdminService {
   /**
    * Get System Statistics
    *
-   * Returns user statistics about the system.
+   * Returns user and project statistics about the system.
    * All counts are calculated in real-time on each request.
    */
   async getStats(): Promise<SystemStatsDto> {
@@ -99,12 +108,12 @@ export class AdminService {
     monthStart.setHours(0, 0, 0, 0);
 
     // Parallel queries for optimal performance
-    const [totalUsers, newUsersToday, newUsersThisMonth] = await Promise.all([
+    const [totalUsers, newUsersToday, newUsersThisMonth, totalProjects] = await Promise.all([
       // Total users
-      this.prisma.user.count(),
+      this.prismaUser.count(),
 
       // New users today
-      this.prisma.user.count({
+      this.prismaUser.count({
         where: {
           createdAt: {
             gte: todayStart,
@@ -113,19 +122,83 @@ export class AdminService {
       }),
 
       // New users this month
-      this.prisma.user.count({
+      this.prismaUser.count({
         where: {
           createdAt: {
             gte: monthStart,
           },
         },
       }),
+
+      // Total projects in showcase
+      this.prismaProject.count(),
     ]);
 
     return {
       totalUsers,
       newUsersToday,
       newUsersThisMonth,
+      totalProjects,
     };
+  }
+
+  /**
+   * Update User Role
+   *
+   * Modifies the role of a specific user.
+   * Admins cannot modify their own role to prevent accidental lockout.
+   */
+  async updateUserRole(userId: string, updateRoleDto: UpdateRoleDto, adminUserId: string): Promise<{ id: string; role: Role }> {
+    // Check if user exists
+    const user = await this.prismaUser.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    // Prevent admin from modifying their own role
+    if (userId === adminUserId) {
+      throw new BadRequestException('Cannot modify your own role');
+    }
+
+    // Update user role
+    const updatedUser = await this.prismaUser.update({
+      where: { id: userId },
+      data: { role: updateRoleDto.role },
+      select: { id: true, role: true },
+    });
+
+    return updatedUser;
+  }
+
+  /**
+   * Delete User
+   *
+   * Permanently deletes a user from the system.
+   * Admins cannot delete themselves to prevent accidental lockout.
+   */
+  async deleteUser(userId: string, adminUserId: string): Promise<void> {
+    // Check if user exists
+    const user = await this.prismaUser.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    // Prevent admin from deleting themselves
+    if (userId === adminUserId) {
+      throw new BadRequestException('Cannot delete your own account');
+    }
+
+    // Delete the user (cascade delete will handle related records)
+    await this.prismaUser.delete({
+      where: { id: userId },
+    });
   }
 }

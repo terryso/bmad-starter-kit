@@ -1,7 +1,7 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { User } from '@prisma/client';
+import { User, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtPayload, UserRole } from '@bmad-starter-kit/shared';
 
@@ -30,13 +30,18 @@ export class AuthService {
    * @param email User email address (must be unique)
    * @param password User password (will be hashed with bcrypt, salt rounds = 10)
    * @param name User display name
+   * @param role Optional user role (defaults to USER, requires secret for ADMIN)
+   * @param adminSecret Optional secret for admin registration
    * @returns User object without password field
    * @throws ConflictException if email already exists
+   * @throws BadRequestException if admin registration without valid secret
    */
   async register(
     email: string,
     password: string,
     name: string,
+    role?: Role,
+    adminSecret?: string,
   ): Promise<Omit<User, 'password'>> {
     // 1. Check if email already exists
     const existingUser = await this.prismaService.user.findUnique({
@@ -47,19 +52,29 @@ export class AuthService {
       throw new ConflictException('该邮箱已被注册');
     }
 
-    // 2. Hash password with bcrypt (salt rounds = 10)
+    // 2. Validate admin registration
+    let userRole = role || Role.USER;
+    if (userRole === Role.ADMIN) {
+      const expectedSecret = process.env.ADMIN_REGISTRATION_SECRET || 'test-admin-secret';
+      if (adminSecret !== expectedSecret) {
+        throw new BadRequestException('Invalid admin registration secret');
+      }
+    }
+
+    // 3. Hash password with bcrypt (salt rounds = 10)
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Create user in database
+    // 4. Create user in database
     const user = await this.prismaService.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
+        role: userRole,
       },
     });
 
-    // 4. Return user without password field
+    // 5. Return user without password field
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }

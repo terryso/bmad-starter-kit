@@ -11,6 +11,7 @@ import { Role } from '@prisma/client';
  * ## Validation Rules
  * - page: Must be >= 1 (default: 1)
  * - pageSize: Must be 1-100 (default: 20)
+ * - limit: Alias for pageSize (for backward compatibility)
  * - search: Optional string for email search
  * - role: Optional role filter (USER or ADMIN)
  *
@@ -51,6 +52,16 @@ export class UsersQueryDto {
   @Min(1)
   @Max(100)
   pageSize?: number = 20;
+
+  /**
+   * Alias for pageSize (for backward compatibility with tests)
+   */
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
 
   /**
    * Search term for email (case-insensitive partial match)

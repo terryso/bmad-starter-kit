@@ -4,7 +4,6 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { query } from '@anthropic-ai/claude-agent-sdk';
 import {
   GitHubProjectResponseSchema,
   GitHubProjectResponse,
@@ -140,7 +139,9 @@ export class GithubFetcherService {
     const baseUrl = this.configService.get<string>('ANTHROPIC_BASE_URL');
 
     try {
-      // 4. Call Agent SDK query
+      // 4. Dynamically import and call Agent SDK query (ESM-only package)
+      const { query } = await import('@anthropic-ai/claude-agent-sdk');
+
       const response = query({
         prompt,
         options: {

@@ -13,6 +13,9 @@ export class SystemStatsDto {
 
   /** Number of new users registered this month */
   newUsersThisMonth: number;
+
+  /** Total number of projects in showcase */
+  totalProjects: number;
 }
 
 /**

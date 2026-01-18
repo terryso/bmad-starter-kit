@@ -43,7 +43,7 @@ export class AuthController {
   async register(
     @Body() dto: RegisterDto,
   ): Promise<ApiResponse<Omit<User, 'password'>>> {
-    const user = await this.authService.register(dto.email, dto.password, dto.name);
+    const user = await this.authService.register(dto.email, dto.password, dto.name, dto.role, dto.adminSecret);
 
     return {
       statusCode: HttpStatus.CREATED,
