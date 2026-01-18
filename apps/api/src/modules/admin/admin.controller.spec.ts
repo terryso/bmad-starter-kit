@@ -72,10 +72,21 @@ describe('AdminController', () => {
 
       const query: UsersQueryDto = { page: 1, pageSize: 20 };
       const mockCurrentUserId = 'test-admin-id';
-      const result = await controller.findAllUsers(query, mockCurrentUserId);
+      // Pass page and pageSize as separate string arguments to trigger pagination format
+      const result = await controller.findAllUsers(query, mockCurrentUserId, '1', '20');
 
       expect(service.findAllUsers).toHaveBeenCalledWith(query, mockCurrentUserId);
-      expect(result).toEqual(mockUsersListResponse);
+      expect(result).toEqual({
+        data: {
+          items: mockUsersListResponse.users,
+          total: mockUsersListResponse.pagination.total,
+          page: mockUsersListResponse.pagination.page,
+          limit: mockUsersListResponse.pagination.pageSize,
+          totalPages: mockUsersListResponse.pagination.totalPages,
+        },
+        statusCode: 200,
+        message: 'success',
+      });
     });
 
     it('should call service with default values when query is empty', async () => {
@@ -99,7 +110,7 @@ describe('AdminController', () => {
         role: Role.ADMIN,
       };
       const mockCurrentUserId = 'test-admin-id';
-      await controller.findAllUsers(query, mockCurrentUserId);
+      await controller.findAllUsers(query, mockCurrentUserId, '1', '20');
 
       expect(service.findAllUsers).toHaveBeenCalledWith(query, mockCurrentUserId);
     });
@@ -109,7 +120,7 @@ describe('AdminController', () => {
 
       const query: UsersQueryDto = { page: 2, pageSize: 50 };
       const mockCurrentUserId = 'test-admin-id';
-      await controller.findAllUsers(query, mockCurrentUserId);
+      await controller.findAllUsers(query, mockCurrentUserId, '2', '50');
 
       expect(service.findAllUsers).toHaveBeenCalledWith(query, mockCurrentUserId);
     });
@@ -120,6 +131,7 @@ describe('AdminController', () => {
       totalUsers: 42,
       newUsersToday: 3,
       newUsersThisMonth: 18,
+      totalProjects: 10,
     };
 
     const expectedResponse = {
@@ -142,6 +154,7 @@ describe('AdminController', () => {
         totalUsers: 0,
         newUsersToday: 0,
         newUsersThisMonth: 0,
+        totalProjects: 0,
       };
 
       service.getStats.mockResolvedValue(emptyStats);

@@ -131,6 +131,8 @@ describe('Auth API Integration Tests', () => {
           dto.email,
           dto.password,
           dto.name,
+          undefined,
+          undefined,
         );
       });
 

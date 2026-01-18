@@ -6,15 +6,12 @@ import { z } from 'zod';
  */
 export const GitHubProjectResponseSchema = z.object({
   repositoryName: z.string().min(1, 'Repository name is required'),
-  description: z.string().min(1, 'Description is required'),
+  description: z.string().nullable().transform(val => val || 'No description available'),
   owner: z.string().min(1, 'Owner is required'),
   stars: z.number().int().min(0, 'Stars must be a non-negative integer'),
   language: z.string().nullable(),
   topics: z.array(z.string()).default([]),
-  updatedAt: z.string().refine(
-    (val) => !isNaN(Date.parse(val)),
-    'updatedAt must be a valid ISO 8601 date string'
-  ),
+  updatedAt: z.string().nullable().transform(val => val || new Date().toISOString()),
   homepageUrl: z
     .string()
     .url('Invalid URL format for homepageUrl')

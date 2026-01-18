@@ -121,6 +121,7 @@ describe('AuthService', () => {
           email: registerData.email,
           password: '$2b$10$hashedpassword',
           name: registerData.name,
+          role: Role.USER,
         },
       });
 

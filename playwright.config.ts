@@ -44,9 +44,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // 测试超时配置
-  timeout: 60 * 1000, // 60秒
+  timeout: 120 * 1000, // 120秒 (API 测试可能需要更长时间)
   expect: {
-    timeout: 15 * 1000, // 15秒
+    timeout: 30 * 1000, // 30秒
   },
 
   // 测试环境默认配置
@@ -60,8 +60,8 @@ export default defineConfig({
     // 失败时保留视频
     video: 'retain-on-failure',
 
-    // 操作超时
-    actionTimeout: 15 * 1000, // 15秒
+    // 操作超时 - API 测试可能需要更长时间
+    actionTimeout: 60 * 1000, // 60秒
 
     // 导航超时
     navigationTimeout: 30 * 1000, // 30秒

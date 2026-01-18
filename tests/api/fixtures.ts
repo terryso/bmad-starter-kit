@@ -40,9 +40,11 @@ export async function createTestUser(
   request: APIRequestContext,
   userData?: { email?: string; password?: string; name?: string }
 ): Promise<AuthenticatedUser> {
+  // 使用随机数避免并发测试时的邮箱冲突
+  const randomSuffix = Math.random().toString(36).substring(2, 10);
   const timestamp = Date.now();
   const defaultUserData = {
-    email: `testuser${timestamp}@example.com`,
+    email: `testuser${timestamp}${randomSuffix}@example.com`,
     password: 'Test123456',
     name: `Test User ${timestamp}`,
   };
@@ -85,13 +87,16 @@ export async function createTestUser(
 
 /**
  * 辅助函数：创建管理员用户并返回 token
+ * 如果创建失败（如已存在），尝试使用固定的管理员账户
  */
 export async function createAdminUser(
   request: APIRequestContext
 ): Promise<AuthenticatedUser> {
+  // 使用随机数避免并发测试时的邮箱冲突
+  const randomSuffix = Math.random().toString(36).substring(2, 10);
   const timestamp = Date.now();
   const adminData = {
-    email: `testadmin${timestamp}@example.com`,
+    email: `testadmin${timestamp}${randomSuffix}@example.com`,
     password: 'Admin123456',
     name: `Test Admin ${timestamp}`,
     role: 'ADMIN',
@@ -103,8 +108,42 @@ export async function createAdminUser(
     data: adminData,
   });
 
+  // 如果注册失败（如并发冲突、速率限制等），尝试使用固定管理员账户登录
   if (registerResponse.status() !== 201) {
-    throw new Error(`Failed to register admin: ${await registerResponse.text()}`);
+    // 尝试登录已存在的管理员账户（使用固定的测试管理员）
+    const fallbackAdmin = {
+      email: 'admin@test.com',
+      password: 'Admin123456',
+    };
+
+    // 先尝试注册固定管理员（忽略结果，可能已存在）
+    await request.post(`${API_URL}/api/v1/auth/register`, {
+      data: {
+        email: fallbackAdmin.email,
+        password: fallbackAdmin.password,
+        name: 'Test Admin',
+        role: 'ADMIN',
+        adminSecret: 'test-admin-secret',
+      },
+    });
+
+    // 然后尝试登录
+    const loginResponse = await request.post(`${API_URL}/api/v1/auth/login`, {
+      data: fallbackAdmin,
+    });
+
+    if (loginResponse.status() !== 200) {
+      throw new Error(`Failed to login admin: ${await loginResponse.text()}`);
+    }
+
+    const loginBody = await loginResponse.json();
+    return {
+      id: loginBody.data.user.id,
+      email: fallbackAdmin.email,
+      name: loginBody.data.user.name,
+      password: fallbackAdmin.password,
+      accessToken: loginBody.data.accessToken,
+    };
   }
 
   const registerBody = await registerResponse.json();

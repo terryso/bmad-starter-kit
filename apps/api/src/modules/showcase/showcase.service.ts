@@ -82,8 +82,6 @@ export interface ProjectDetailResponse {
   description: string;
   owner: string;
   stars: number;
-  forks: number | null;
-  issues: number | null;
   language: string | null;
   topics: string[];
   category: ProjectCategory;
@@ -283,8 +281,6 @@ export class ShowcaseService {
           description: true,
           owner: true,
           stars: true,
-          forks: true,
-          issues: true,
           language: true,
           topics: true,
           category: true,
@@ -324,8 +320,6 @@ export class ShowcaseService {
         description: true,
         owner: true,
         stars: true,
-        forks: true,
-        issues: true,
         language: true,
         topics: true,
         category: true,
@@ -337,14 +331,14 @@ export class ShowcaseService {
         createdAt: true,
         githubUpdatedAt: true,
         status: true,
-        submittedBy: {
+        submittedByUser: {
           select: {
             id: true,
             name: true,
             email: true,
           },
         },
-        reviewedBy: {
+        reviewedByUser: {
           select: {
             id: true,
             name: true,
@@ -371,8 +365,6 @@ export class ShowcaseService {
       description: project.description,
       owner: project.owner,
       stars: project.stars,
-      forks: project.forks,
-      issues: project.issues,
       language: project.language,
       topics: project.topics,
       category: project.category,
@@ -383,8 +375,8 @@ export class ShowcaseService {
       githubUrl: project.githubUrl,
       createdAt: project.createdAt.toISOString(),
       githubUpdatedAt: project.githubUpdatedAt?.toISOString() || null,
-      submittedBy: project.submittedBy,
-      reviewedBy: project.reviewedBy,
+      submittedBy: project.submittedByUser,
+      reviewedBy: project.reviewedByUser,
       reviewedAt: project.reviewedAt?.toISOString() || null,
     };
   }

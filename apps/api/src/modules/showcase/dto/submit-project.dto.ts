@@ -7,7 +7,7 @@ export class SubmitProjectDto {
   @IsString()
   @IsNotEmpty({ message: 'GitHub URL 不能为空' })
   @Matches(
-    /(?:https?:\/\/)?(?:www\.)?github\.com\/[^\/]+\/[^\/\.]+(?:\.git)?/,
+    /^https?:\/\/(?:www\.)?github\.com\/[^\/]+\/[^\/]+\/?$/,
     {
       message: '无效的 GitHub URL 格式，正确格式: https://github.com/owner/repo',
     }

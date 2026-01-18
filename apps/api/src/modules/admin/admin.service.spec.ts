@@ -10,6 +10,9 @@ type MockPrismaService = {
     findMany: jest.Mock;
     count: jest.Mock;
   };
+  project: {
+    count: jest.Mock;
+  };
 };
 
 describe('AdminService', () => {
@@ -37,6 +40,9 @@ describe('AdminService', () => {
   const createMockPrismaService = (): MockPrismaService => ({
     user: {
       findMany: jest.fn(),
+      count: jest.fn(),
+    },
+    project: {
       count: jest.fn(),
     },
   });
@@ -268,6 +274,7 @@ describe('AdminService', () => {
     beforeEach(() => {
       // Setup default mock return values
       prismaService.user.count.mockResolvedValue(42);
+      prismaService.project.count.mockResolvedValue(10);
     });
 
     it('should return aggregated statistics', async () => {
@@ -276,6 +283,7 @@ describe('AdminService', () => {
         .mockResolvedValueOnce(42) // totalUsers
         .mockResolvedValueOnce(3) // newUsersToday
         .mockResolvedValueOnce(18); // newUsersThisMonth
+      prismaService.project.count.mockResolvedValueOnce(10); // totalProjects
 
       const result = await service.getStats();
 
@@ -283,6 +291,7 @@ describe('AdminService', () => {
         totalUsers: 42,
         newUsersToday: 3,
         newUsersThisMonth: 18,
+        totalProjects: 10,
       });
     });
 
@@ -291,6 +300,7 @@ describe('AdminService', () => {
         .mockResolvedValueOnce(0)
         .mockResolvedValueOnce(0)
         .mockResolvedValueOnce(0);
+      prismaService.project.count.mockResolvedValueOnce(0);
 
       const result = await service.getStats();
 
@@ -298,6 +308,7 @@ describe('AdminService', () => {
         totalUsers: 0,
         newUsersToday: 0,
         newUsersThisMonth: 0,
+        totalProjects: 0,
       });
     });
 
@@ -306,11 +317,13 @@ describe('AdminService', () => {
         .mockResolvedValueOnce(100)
         .mockResolvedValueOnce(5)
         .mockResolvedValueOnce(50);
+      prismaService.project.count.mockResolvedValueOnce(10);
 
       await service.getStats();
 
       // Verify all queries were called
       expect(prismaService.user.count).toHaveBeenCalledTimes(3);
+      expect(prismaService.project.count).toHaveBeenCalledTimes(1);
     });
 
     it('should calculate today start correctly for "today" stats', async () => {
@@ -318,6 +331,7 @@ describe('AdminService', () => {
         .mockResolvedValueOnce(100)
         .mockResolvedValueOnce(5)
         .mockResolvedValueOnce(50);
+      prismaService.project.count.mockResolvedValueOnce(10);
 
       await service.getStats();
 
@@ -341,6 +355,7 @@ describe('AdminService', () => {
         .mockResolvedValueOnce(100)
         .mockResolvedValueOnce(5)
         .mockResolvedValueOnce(50);
+      prismaService.project.count.mockResolvedValueOnce(10);
 
       await service.getStats();
 

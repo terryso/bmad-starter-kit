@@ -86,6 +86,8 @@ describe('AuthController', () => {
         validDto.email,
         validDto.password,
         validDto.name,
+        undefined,
+        undefined,
       );
     });
 
@@ -99,6 +101,8 @@ describe('AuthController', () => {
         validDto.email,
         validDto.password,
         validDto.name,
+        undefined,
+        undefined,
       );
     });
 
@@ -122,6 +126,8 @@ describe('AuthController', () => {
         'test@example.com',
         '12345678',
         'Test User',
+        undefined,
+        undefined,
       );
     });
   });

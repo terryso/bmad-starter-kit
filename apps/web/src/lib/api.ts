@@ -145,9 +145,39 @@ export const adminApi = {
     pageSize?: number;
     search?: string;
     role?: 'USER' | 'ADMIN';
-  }) => {
-    const response = await api.get('/api/v1/admin/users', { params });
-    return response.data as UsersListResponse;
+  }): Promise<UsersListResponse> => {
+    const response = await api.get<{
+      data: {
+        items: Array<{
+          id: string;
+          email: string;
+          name: string;
+          role: 'USER' | 'ADMIN';
+          createdAt: string;
+        }>;
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      };
+      statusCode: number;
+      message: string;
+    }>('/api/v1/admin/users', { params });
+
+    const { data } = response.data;
+    return {
+      users: data.items.map((user) => ({
+        ...user,
+        createdAt: new Date(user.createdAt), // Convert string to Date
+        lastActiveAt: null, // API 不返回此字段
+      })),
+      pagination: {
+        page: data.page,
+        pageSize: data.limit,
+        total: data.total,
+        totalPages: data.totalPages,
+      },
+    };
   },
 
   /**
@@ -159,6 +189,52 @@ export const adminApi = {
       '/api/v1/admin/stats'
     );
     return response.data;
+  },
+
+  /**
+   * 删除单个用户 (仅管理员)
+   * @param id 用户 ID
+   * @param currentUserId 当前用户 ID (防止删除自己)
+   */
+  deleteUser: async (id: string, currentUserId?: string): Promise<void> => {
+    if (id === currentUserId) {
+      throw new Error('不能删除自己的账户');
+    }
+    await api.delete(`/api/v1/admin/users/${id}`);
+  },
+
+  /**
+   * 批量删除用户 (仅管理员)
+   * @param ids 用户 ID 数组
+   * @param currentUserId 当前用户 ID (防止删除自己)
+   */
+  batchDeleteUsers: async (ids: string[], currentUserId?: string): Promise<{ success: number; failed: number; errors: string[] }> => {
+    // 过滤掉当前用户
+    const filteredIds = currentUserId ? ids.filter(id => id !== currentUserId) : ids;
+
+    if (filteredIds.length === 0) {
+      throw new Error('没有可选择删除的用户');
+    }
+
+    const errors: string[] = [];
+    let success = 0;
+    let failed = 0;
+
+    // 并发删除请求
+    const results = await Promise.allSettled(
+      filteredIds.map(id => api.delete(`/api/v1/admin/users/${id}`))
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        success++;
+      } else {
+        failed++;
+        errors.push(`用户 ${filteredIds[index]} 删除失败`);
+      }
+    });
+
+    return { success, failed, errors };
   },
 };
 

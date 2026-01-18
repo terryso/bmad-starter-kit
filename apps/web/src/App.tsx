@@ -16,7 +16,15 @@ import ProjectDetail from "./pages/showcase/ProjectDetail";
 import { ProtectedRoute } from "@/components/routes/ProtectedRoute";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1, // 失败后只重试 1 次（默认是 3 次），设为 false 可完全禁用
+      refetchOnWindowFocus: false, // 窗口聚焦时不自动重新请求
+      retryDelay: 1000, // 重试延迟 1 秒
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
