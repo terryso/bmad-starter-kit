@@ -20,6 +20,16 @@
 
 [https://bmad-starter-kit.surge.sh/](https://bmad-starter-kit.surge.sh/)
 
+## 🎨 项目展示
+
+[**查看 BMAD 项目展示 →**](https://bmad-starter-kit.surge.sh/showcase)
+
+![BMAD 项目展示](https://i.v2ex.co/36PSjhD3l.png)
+
+看看社区成员用 BMAD 构建了什么！展示页面收录了大家在练习 BMAD 工作流过程中创建的项目。
+
+**用 BMAD 构建了项目？** 我们很期待看到！提交你的项目到展示页，激励更多人。访问[展示页面](https://bmad-starter-kit.surge.sh/showcase)了解提交详情。
+
 ## 快速开始
 
 ```bash
@@ -149,7 +159,7 @@ pnpm dev
 - 基于角色的访问控制（USER/ADMIN）
 - 带统计信息的管理后台
 - 用户管理（列表、搜索、筛选）
-- **BMAD 项目展示** - 提交并展示你的 BMAD 练习项目
+- **BMAD 项目展示** - 浏览并提交社区用 BMAD 构建的项目
 
 ### 项目结构
 

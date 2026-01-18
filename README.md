@@ -20,6 +20,16 @@ The project comes with a basic authentication system and admin dashboard as a fo
 
 [https://bmad-starter-kit.surge.sh/](https://bmad-starter-kit.surge.sh/)
 
+## 🎨 Showcase
+
+[**View the BMAD Showcase →**](https://bmad-starter-kit.surge.sh/showcase)
+
+![BMAD Showcase](https://i.v2ex.co/36PSjhD3l.png)
+
+See what others have built with BMAD! The showcase features projects created by community members practicing the BMAD workflow.
+
+**Built something with BMAD?** We'd love to see it! Submit your project to the showcase and inspire others. Check out the [Showcase page](https://bmad-starter-kit.surge.sh/showcase) for submission details.
+
 ## Quick Start
 
 ```bash
@@ -149,7 +159,7 @@ Go back to Step 3 for the next story until all stories in the sprint are complet
 - Role-based access control (USER/ADMIN)
 - Admin dashboard with statistics
 - User management (list, search, filter)
-- **BMAD Showcase** - Submit and showcase your BMAD practice projects
+- **BMAD Showcase** - Browse and submit community projects built with BMAD
 
 ### Project Structure
 

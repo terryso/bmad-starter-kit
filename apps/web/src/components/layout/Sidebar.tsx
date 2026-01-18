@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 
 const navigation = [
   { name: "仪表盘", href: "/", icon: LayoutDashboard },
-  { name: "项目展示", href: "/showcase", icon: FolderOpen },
+  { name: "我的项目", href: "/showcase/my-projects", icon: FolderOpen },
 ];
 
 // Admin only navigation
@@ -46,10 +46,7 @@ export function Sidebar() {
       {/* Main Navigation */}
       <nav className="flex-1 px-2 lg:px-3 space-y-1">
         {navigation.map((item) => {
-          // For showcase, highlight when pathname starts with /showcase
-          const isActive = item.href === "/showcase"
-            ? location.pathname.startsWith("/showcase")
-            : location.pathname === item.href;
+          const isActive = location.pathname === item.href;
           return (
             <NavLink
               key={item.name}
