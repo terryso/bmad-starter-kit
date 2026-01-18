@@ -30,6 +30,8 @@ describe('ProjectCard', () => {
     description: 'An awesome project for testing',
     owner: 'testuser',
     stars: 1234,
+    forks: 56,
+    openIssues: 12,
     language: 'TypeScript',
     topics: ['web', 'framework'],
     category: 'WEB_APP',

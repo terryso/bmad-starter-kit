@@ -56,13 +56,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
             {/* Fork 数 */}
             <div className="flex items-center gap-1">
               <GitFork className="w-4 h-4" />
-              <span>{project.forks.toLocaleString()}</span>
+              <span>{project.forks?.toLocaleString() ?? '0'}</span>
             </div>
 
             {/* Issues 数 */}
             <div className="flex items-center gap-1">
               <AlertCircle className="w-4 h-4" />
-              <span>{project.openIssues.toLocaleString()}</span>
+              <span>{project.openIssues?.toLocaleString() ?? '0'}</span>
             </div>
           </div>
 

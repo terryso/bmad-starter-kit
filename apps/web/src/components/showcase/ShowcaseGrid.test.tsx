@@ -28,6 +28,8 @@ describe('ShowcaseGrid', () => {
     description: `Description for project ${id}`,
     owner: `owner-${id}`,
     stars: 1000 + parseInt(id),
+    forks: 50 + parseInt(id),
+    openIssues: 10 + parseInt(id),
     language: 'TypeScript',
     topics: ['web', 'framework'],
     category: 'WEB_APP' as const,
