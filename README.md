@@ -1,5 +1,7 @@
 # BMAD Starter Kit
 
+[![BMAD](https://bmad-badge.vercel.app/terryso/bmad-starter-kit.svg)](https://github.com/bmad-code-org/BMAD-METHOD)
+
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 > A practice project for learning BMAD development workflow
