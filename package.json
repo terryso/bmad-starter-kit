@@ -4,8 +4,8 @@
   "private": true,
   "description": "A BMAD learning project with user authentication and admin dashboard",
   "scripts": {
-    "dev": "concurrently \"pnpm --filter @bmad-starter-kit/api dev\" \"pnpm --filter @bmad-starter-kit/web dev\"",
-    "dev:api": "pnpm --filter @bmad-starter-kit/api dev",
+    "dev": "concurrently \"pnpm --filter @bmad-starter-kit/api start:dev\" \"pnpm --filter @bmad-starter-kit/web dev\"",
+    "dev:api": "pnpm --filter @bmad-starter-kit/api start:dev",
     "dev:web": "pnpm --filter @bmad-starter-kit/web dev",
     "build": "turbo run build",
     "build:api": "pnpm --filter @bmad-starter-kit/api build",
